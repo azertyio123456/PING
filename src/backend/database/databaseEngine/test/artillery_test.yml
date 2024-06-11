@@ -1,0 +1,37 @@
+config:
+  target: 'http://localhost:3000'  # Ensure this matches your actual server URL
+  phases:
+    - duration: 60  # Test duration of 60 seconds
+      arrivalRate: 20  # Every second, 20 new virtual users will start
+      name: "Warm-up phase"
+    - duration: 120  # Additional test duration of 120 seconds
+      arrivalRate: 50  # Start with 50 users
+      rampTo: 100  # Ramp up to 100 users by the end of this phase
+      name: "High load phase"
+  defaults:
+    headers:
+      Content-Type: 'application/json'
+
+scenarios:
+  - name: "Intensive statue operations"
+    flow:
+      - post:
+          url: "/statues"
+          json:
+            name: "Apollo"
+            price: 500
+          capture:
+            json: "$.id"
+            as: "statueId"
+      - get:
+          url: "/statues/{{ statueId }}"
+      - put:
+          url: "/statues/{{ statueId }}"
+          json:
+            name: "Zeus"
+            price: 600
+      - get:
+          url: "/statues/{{ statueId }}"
+      - delete:
+          url: "/statues/{{ statueId }}"
+      - think: 1  # Think time of 1 second

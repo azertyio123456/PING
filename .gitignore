@@ -34,3 +34,7 @@ yarn-error.log*
 *.swp
 *.swo
 *.bak
+
+
+collected_ts_files.txt
+collect_ts_files.sh
