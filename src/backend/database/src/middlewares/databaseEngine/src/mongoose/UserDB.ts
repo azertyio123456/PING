@@ -14,6 +14,7 @@ export interface IUser extends Document {
         gold: number;
         exp: number;
         evolution_id: number;
+        path_images: string;
     };
 }
 
@@ -29,7 +30,8 @@ const userSchema: Schema<IUser> = new Schema(
         competence: { type: [String], default: [] },
         gold: { type: Number, default: 0 },
         exp: { type: Number, default: 0 },
-        evolution_id: { type: Number }
+        evolution_id: { type: Number },
+        path_images: {type: String}
     }
 }, 
 {
@@ -221,6 +223,30 @@ export class UserDB extends DatabaseEntity<IUser>
         if (doc)
         {
             doc.gamification.evolution_id = evolution_id;
+        }
+    }
+
+    /**
+     * Retrieves the evolution ID of a user at a specific index in the loaded documents.
+     * @param index Index of the user in the loaded documents array.
+     * @returns The evolution ID of the user if found, otherwise undefined.
+     */
+    GetPathImages(index: number): string | undefined
+    {
+        return this.document?.at(index)?.gamification.path_images;
+    }
+
+    /**
+     * Updates the evolution ID of a user at a specific index in the loaded documents.
+     * @param evolution_id New evolution ID to set.
+     * @param index Index of the user in the loaded documents array.
+     */
+    SetPathImages(path_images: string, index: number): void
+    {
+        const doc = this.document?.[index];
+        if (doc)
+        {
+            doc.gamification.path_images = path_images;
         }
     }
 }

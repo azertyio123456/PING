@@ -9,3 +9,12 @@ export const validateRequest = (req: Request, res: Response, next: NextFunction)
     }
     next();
 };
+export const validateRequestInit = (req: Request, res: Response, next: NextFunction) => 
+{
+    const { email, username } = req.body;
+    if (!email || !username)
+    {
+        return res.status(400).json({ error: 'Email && username required' });
+    }
+    next();
+};

@@ -10,6 +10,7 @@ describe('User Model Test Suite', () => {
       gold: 100,
       exp: 50,
       evolution_id: 1,
+      path_image: ""
     }
   };
 

@@ -14,6 +14,7 @@ export class User
         gold: number;
         exp: number;
         evolution_id: number;
+        path_image: string;
     };
 
     /**
@@ -31,6 +32,7 @@ export class User
             gold: number;
             exp: number;
             evolution_id: number;
+            path_image: string;
         },
         id?: number
     )

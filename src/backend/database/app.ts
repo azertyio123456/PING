@@ -1,7 +1,7 @@
 import express,{ Request, Response } from 'express';
 import cors from 'cors';
-import {Moongose} from './databaseEngine/src/mongoose/moongose'
-import loginRoutes from './login/src/routes/login'; 
+import {Moongose} from './src/middlewares/databaseEngine/src/mongoose/moongose'
+import loginRoutes from './src/routes/UserRoutes'; 
 
 
 const app = express();

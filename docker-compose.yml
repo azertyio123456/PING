@@ -24,7 +24,7 @@ services:
     networks:
       - db_network
     environment:
-      - MONGODB_URI=mongodb+srv://yourentertainmentscompagny:BLX0bKwtZTwqTm5a@playground.mngkvjq.mongodb.net/yourPieces?retryWrites=true&w=majority&appName=Playground
+      - MONGODB_URI=mongodb+srv://yourentertainmentscompagny:BLX0bKwtZTwqTm5a@playground.mngkvjq.mongodb.net/PING?retryWrites=true&w=majority&appName=Playground
 
   dockerserviceclient:
     build:
@@ -38,9 +38,24 @@ services:
     depends_on:
       - metrics
       - database
+  imageservice:
+    build:
+      context: ./src/backend/imageService
+      dockerfile: Dockerfile
+    ports:
+      - "9090:9090"
+    networks:
+      - db_network
+    depends_on:
+      - database
+    volumes:
+      - images_data:/usr/src/app/images
 
 networks:
   db_network:
     driver: bridge
   metrics_network:
     driver: bridge
+volumes:
+  images_data:
+    driver: local
