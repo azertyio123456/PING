@@ -11,10 +11,12 @@ export interface IUser extends Document {
     email: string;
     gamification: {
         competence: string[];
-        gold: number;
-        exp: number;
+        gold: number[];
+        exp: number[];
         evolution_id: number;
         path_images: string;
+        lines_written: number[];
+        errors: number[];
     };
 }
 
@@ -28,10 +30,12 @@ const userSchema: Schema<IUser> = new Schema(
     email: { type: String, required: true, unique: true },
     gamification: {
         competence: { type: [String], default: [] },
-        gold: { type: Number, default: 0 },
-        exp: { type: Number, default: 0 },
+        gold: { type: [Number], default: [] },
+        exp: { type: [Number], default: [] },
         evolution_id: { type: Number },
-        path_images: {type: String}
+        path_images: { type: String },
+        lines_written: { type: [Number], default: [] },
+        errors: { type: [Number], default: [] }
     }
 }, 
 {
@@ -47,6 +51,7 @@ userSchema.index({ email: 1, username: 1 }, { unique: true });
 
 // Compile model from schema
 export const userModel = mongoose.model<IUser>('User', userSchema);
+
 
 /**
  * Database operations class for User entities, extending generic DatabaseEntity class.
@@ -155,54 +160,6 @@ export class UserDB extends DatabaseEntity<IUser>
     }
 
     /**
-     * Retrieves the gold balance of a user at a specific index in the loaded documents.
-     * @param index Index of the user in the loaded documents array.
-     * @returns The gold balance of the user if found, otherwise undefined.
-     */
-    GetGold(index: number): number | undefined
-    {
-        return this.document?.at(index)?.gamification.gold;
-    }
-
-    /**
-     * Updates the gold balance of a user at a specific index in the loaded documents.
-     * @param gold New gold balance to set.
-     * @param index Index of the user in the loaded documents array.
-     */
-    SetGold(gold: number, index: number): void
-    {
-        const doc = this.document?.[index];
-        if (doc)
-        {
-            doc.gamification.gold = gold;
-        }
-    }
-
-    /**
-     * Retrieves the experience points (EXP) of a user at a specific index in the loaded documents.
-     * @param index Index of the user in the loaded documents array.
-     * @returns The experience points of the user if found, otherwise undefined.
-     */
-    GetExp(index: number): number | undefined
-    {
-        return this.document?.at(index)?.gamification.exp;
-    }
-
-    /**
-     * Updates the experience points (EXP) of a user at a specific index in the loaded documents.
-     * @param exp New experience points to set.
-     * @param index Index of the user in the loaded documents array.
-     */
-    SetExp(exp: number, index: number): void
-    {
-        const doc = this.document?.[index];
-        if (doc)
-        {
-            doc.gamification.exp = exp;
-        }
-    }
-
-    /**
      * Retrieves the evolution ID of a user at a specific index in the loaded documents.
      * @param index Index of the user in the loaded documents array.
      * @returns The evolution ID of the user if found, otherwise undefined.
@@ -247,6 +204,61 @@ export class UserDB extends DatabaseEntity<IUser>
         if (doc)
         {
             doc.gamification.path_images = path_images;
+        }
+    }
+    GetLinesWritten(index: number): number[] | undefined
+    {
+        return this.document?.at(index)?.gamification.lines_written;
+    }
+
+    SetLinesWritten(lines: number[], index: number): void
+    {
+        const doc = this.document?.[index];
+        if (doc)
+        {
+            doc.gamification.lines_written = lines;
+        }
+    }
+
+    GetErrors(index: number): number[] | undefined
+    {
+        return this.document?.at(index)?.gamification.errors;
+    }
+
+    SetErrors(errors: number[], index: number): void
+    {
+        const doc = this.document?.[index];
+        if (doc)
+        {
+            doc.gamification.errors = errors;
+        }
+    }
+
+    GetGold(index: number): number[] | undefined
+    {
+        return this.document?.at(index)?.gamification.gold;
+    }
+
+    SetGold(gold: number[], index: number): void
+    {
+        const doc = this.document?.[index];
+        if (doc)
+        {
+            doc.gamification.gold = gold;
+        }
+    }
+
+    GetExp(index: number): number[] | undefined
+    {
+        return this.document?.at(index)?.gamification.exp;
+    }
+
+    SetExp(exp: number[], index: number): void
+    {
+        const doc = this.document?.[index];
+        if (doc)
+        {
+            doc.gamification.exp = exp;
         }
     }
 }

@@ -33,34 +33,36 @@ export const Login = async (req: Request, res: Response) =>
 };
 
 export const Register = async (req: Request, res: Response) => 
-{
-    const { email, username } = req.body;
-    let userDb: UserDB = new UserDB();
-    try
     {
-        const userData = {
-            username: username,
-            email: email,
-            gamification: {
-              competence: [],
-              gold: 0,
-              exp: 0,
-              evolution_id: 0,
-              path_image: ""
-            }
-          };
-          const user = new User(
-            userData.username,
-            userData.email,
-            userData.gamification
-          );
-        await userDb.SaveNewInstance(user.ToIUser());
-        res.status(200).json({ message: "User successfully registered !" });
-    }
-    catch (error)
-    {
-        res.status(500).json({ error: "Internal server error." });
-    }
+        const { email, username } = req.body;
+        let userDb: UserDB = new UserDB();
+        try
+        {
+            const userData = {
+                username: username,
+                email: email,
+                gamification: {
+                  competence: [],
+                  gold: [],
+                  exp: [],
+                  evolution_id: 0,
+                  path_image: "",
+                  lines_written: [],
+                  errors: []
+                }
+              };
+              const user = new User(
+                userData.username,
+                userData.email,
+                userData.gamification
+              );
+            await userDb.SaveNewInstance(user.ToIUser());
+            res.status(200).json({ message: "User successfully registered !" });
+        }
+        catch (error)
+        {
+            res.status(500).json({ error: "Internal server error." });
+        }
 };
 
 export const SetImage = async (req: Request, res: Response) => 
@@ -85,6 +87,39 @@ export const SetImage = async (req: Request, res: Response) =>
             else
             {
                 res.status(401).json({ error: "Username Do not exists" });
+            }
+        }
+    }
+    catch (error)
+    {
+        res.status(500).json({ error: "Internal server error." });
+    }
+};
+
+export const UpdateUserFromJSON = async (req: Request, res: Response) => 
+{
+    const { username, email, gamification } = req.body;
+    let userDb: UserDB = new UserDB();
+
+    try
+    {
+        await userDb.RetrieveByCriteria({ email: email });
+        if (userDb.GetDocument()?.length === 0)
+        {
+            res.status(404).json({ error: "Unknown User!" });
+        }
+        else
+        {
+            if (email === userDb.GetEmail(0))
+            {
+                userDb.SetUsername(username, 0);
+                userDb.SetGamification(gamification, 0);
+                await userDb.Update();
+                res.status(200).json({ message: "User successfully updated!" });
+            }
+            else
+            {
+                res.status(401).json({ error: "Email does not match any user" });
             }
         }
     }

@@ -7,10 +7,12 @@ describe('User Model Test Suite', () => {
     email: 'testuser@example.comss',
     gamification: {
       competence: ['codings', 'testings'],
-      gold: 100,
-      exp: 50,
+      gold: [],
+      exp: [],
       evolution_id: 1,
-      path_image: ""
+      path_image: "",
+      lines_written: [],
+        errors: []
     }
   };
 
@@ -18,7 +20,7 @@ describe('User Model Test Suite', () => {
     const user = new User(
       userData.username,
       userData.email,
-      userData.gamification
+      userData.gamification,
     );
 
     const savedUser = new UserDB();

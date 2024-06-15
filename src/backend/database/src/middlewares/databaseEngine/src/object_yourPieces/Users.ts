@@ -11,10 +11,12 @@ export class User
     private email: string;
     private gamification: {
         competence: string[];
-        gold: number;
-        exp: number;
+        gold: number[];
+        exp: number[];
         evolution_id: number;
         path_image: string;
+        lines_written: number[];
+        errors: number[];
     };
 
     /**
@@ -29,10 +31,12 @@ export class User
         email: string,
         gamification: {
             competence: string[];
-            gold: number;
-            exp: number;
+            gold: number[];
+            exp: number[];
             evolution_id: number;
             path_image: string;
+            lines_written: number[];
+            errors: number[];
         },
         id?: number
     )

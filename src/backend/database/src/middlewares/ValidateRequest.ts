@@ -27,3 +27,12 @@ export const validateRequestSetImage = (req: Request, res: Response, next: NextF
     }
     next();
 };
+export const validateRequestUpdateUser = (req: Request, res: Response, next: NextFunction) => 
+{
+    const { email, gamification } = req.body;
+    if (!email || !gamification)
+    {
+        return res.status(400).json({ error: 'email and gamification data are required to update user' });
+    }
+    next();
+};
