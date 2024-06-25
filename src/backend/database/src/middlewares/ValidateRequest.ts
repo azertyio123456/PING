@@ -11,8 +11,8 @@ export const validateRequestRegister = (req: Request, res: Response, next: NextF
 };
 export const validateRequestLogin = (req: Request, res: Response, next: NextFunction) => 
 {
-    const { email } = req.body;
-    if (!email)
+    const { username } = req.body;
+    if (!username)
     {
         return res.status(400).json({ error: 'email is required to login' });
     }

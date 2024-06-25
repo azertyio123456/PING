@@ -209,4 +209,8 @@ export abstract class DatabaseEntity<T extends Document>
     {
         return this.document;
     }
+    Free(): void
+    {
+        this.document = [];
+    }
 }

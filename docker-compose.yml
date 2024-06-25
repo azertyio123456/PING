@@ -38,6 +38,16 @@ services:
     depends_on:
       - metrics
       - database
+  gamification:
+    build:
+      context: ./src/backend/gamification
+      dockerfile: Dockerfile
+    ports:
+      - "7000:7000"
+    networks:
+      - db_network
+    depends_on:
+      - database
   imageservice:
     build:
       context: ./src/backend/imageService

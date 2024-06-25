@@ -1,0 +1,6 @@
+{
+  "dependencies": {
+    "dotenv": "^16.4.5",
+    "dotnet": "^1.1.4"
+  }
+}
