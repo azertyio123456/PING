@@ -1,4 +1,3 @@
-// src/services/LeaderboardService.ts
 import axios from 'axios';
 
 export const fetchAllUsers = async () =>
@@ -42,7 +41,21 @@ export const UpdateUser = async (user : any) =>
         console.error("UpdateUser error: ", error); // Log the error for debugging
     }
 };
-    
+export const UpdatePokemon = async (pokemon : any) =>
+{
+    try
+    {
+        const response = await axios.post('http://database:3000/api/pokemon/update', {
+            pokemon: pokemon
+        });
+        return response.data;
+    }
+    catch (error)
+    {
+        console.error("UpdatePokemon error: ", error); // Log the error for debugging
+    }
+};
+        
 export const fetchUserPokemon = async (username: string) =>
 {
     try

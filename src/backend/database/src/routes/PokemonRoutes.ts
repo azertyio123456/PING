@@ -1,8 +1,9 @@
 import { Router } from 'express';
-import { GetPokemon } from '../controllers/PokemonController';
+import { GetPokemon, UpdatePokemon } from '../controllers/PokemonController';
 
 const router = Router();
 
 router.post('/get', GetPokemon);
+router.post('/update', UpdatePokemon);
 
 export default router;
