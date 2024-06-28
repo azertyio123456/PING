@@ -1,4 +1,4 @@
-# src//backend/database/app.ts
+# src/backend/database/app.ts
 import express,{ Request, Response } from 'express';
 import cors from 'cors';
 import {Moongose} from './src/middlewares/databaseEngine/src/mongoose/moongose'
@@ -21,7 +21,7 @@ app.get('/health', (_: Request, res: Response) =>
 });
 Moongose.ConnectToDatabase().then(() => app.listen(PORT, () => console.log(`Server running on http://localhost:${PORT}`)));
 
-# src//backend/database/src/controllers/BoutiqueControllers.ts
+# src/backend/database/src/controllers/BoutiqueControllers.ts
 import { Request, Response } from 'express';
 import { BoutiqueDB } from '../middlewares/databaseEngine/src/mongoose/BoutiqueDB';
 
@@ -49,7 +49,7 @@ export const GetBoutiqueItems = async (req: Request, res: Response) =>
 };
 
 
-# src//backend/database/src/controllers/PokemonController.ts
+# src/backend/database/src/controllers/PokemonController.ts
 import { Request, Response } from 'express';
 import { PokemonDB } from '../middlewares/databaseEngine/src/mongoose/PokemonDB';
 
@@ -83,9 +83,34 @@ export const GetPokemon = async (req: Request, res: Response) =>
         res.status(500).json({ error: "Internal server error." });
     }
 };
+export const UpdatePokemon = async (req: Request, res: Response) => 
+{
+    const { pokemon } = req.body;
+    let pokemonDb: PokemonDB = new PokemonDB();
+    try
+    {
+        await pokemonDb.RetrieveByCriteria({ username: pokemon.username });
+        if (pokemonDb.GetDocument()?.length === 0)
+        {
+            res.status(404).json({ error: "Unknown User!" });
+        } 
+        else
+        {
 
+            pokemonDb.SetGamification( pokemon.gamification, 0);
+            await pokemonDb.Update();
+            res.status(200).json({ message: "User successfully updated!" });
 
-# src//backend/database/src/controllers/UserControllers.ts
+        }
+    }
+    catch (error)
+    {
+        res.status(500).json({ error: "Internal server error." });
+    }
+};
+    
+
+# src/backend/database/src/controllers/UserControllers.ts
 import { UserDB } from '../middlewares/databaseEngine/src/mongoose/UserDB';
 import { Request, Response } from 'express';
 import { User } from '../middlewares/databaseEngine/src/object_yourPieces/Users';
@@ -280,7 +305,7 @@ export const UpdateUserFromJSON = async (req: Request, res: Response) =>
     }
 };
 
-# src//backend/database/src/middlewares/ValidateRequest.ts
+# src/backend/database/src/middlewares/ValidateRequest.ts
 import { Request, Response, NextFunction } from 'express';
 
 export const validateRequestRegister = (req: Request, res: Response, next: NextFunction) => 
@@ -320,7 +345,7 @@ export const validateRequestUpdateUser = (req: Request, res: Response, next: Nex
     next();
 };
 
-# src//backend/database/src/middlewares/databaseEngine/src/decorateur/decorateur.ts
+# src/backend/database/src/middlewares/databaseEngine/src/decorateur/decorateur.ts
 import { Logger } from '../logger/logger';
 
 /**
@@ -365,7 +390,7 @@ export function CatchErrors<T extends (...args: any[]) => Promise<any>>(
 }
 
 
-# src//backend/database/src/middlewares/databaseEngine/src/logger/logger.ts
+# src/backend/database/src/middlewares/databaseEngine/src/logger/logger.ts
 import { createLogger, format, transports } from 'winston';
 import 'winston-mongodb';
 import dotenv from 'dotenv';
@@ -470,7 +495,7 @@ export class Logger
 }
 
 
-# src//backend/database/src/middlewares/databaseEngine/src/mongoose/BoutiqueDB.ts
+# src/backend/database/src/middlewares/databaseEngine/src/mongoose/BoutiqueDB.ts
 import { DatabaseEntity } from './databaseEntity';
 import mongoose, { Document, Schema } from 'mongoose';
 const AutoIncrement = require('mongoose-sequence')(mongoose);
@@ -620,7 +645,7 @@ export class BoutiqueDB extends DatabaseEntity<IBoutique>
     }
 }
 
-# src//backend/database/src/middlewares/databaseEngine/src/mongoose/PokemonDB.ts
+# src/backend/database/src/middlewares/databaseEngine/src/mongoose/PokemonDB.ts
 import mongoose, { Document, Schema } from 'mongoose';
 import { DatabaseEntity } from './databaseEntity';
 
@@ -699,7 +724,7 @@ export class PokemonDB extends DatabaseEntity<IPokemon>
 }
 
 
-# src//backend/database/src/middlewares/databaseEngine/src/mongoose/TransactionDB.ts
+# src/backend/database/src/middlewares/databaseEngine/src/mongoose/TransactionDB.ts
 import mongoose, { Document, Schema } from 'mongoose';
 import { DatabaseEntity } from './databaseEntity';
 const AutoIncrement = require('mongoose-sequence')(mongoose);
@@ -819,7 +844,7 @@ export class TransactionDB extends DatabaseEntity<ITransaction>
 }
 
 
-# src//backend/database/src/middlewares/databaseEngine/src/mongoose/UserDB.ts
+# src/backend/database/src/middlewares/databaseEngine/src/mongoose/UserDB.ts
 // src/middlewares/databaseEngine/src/mongoose/UserDB.ts
 import { DatabaseEntity } from './databaseEntity';
 import mongoose, { Document, Schema } from 'mongoose';
@@ -1106,7 +1131,7 @@ export class UserDB extends DatabaseEntity<IUser>
 }
 
 
-# src//backend/database/src/middlewares/databaseEngine/src/mongoose/databaseEntity.ts
+# src/backend/database/src/middlewares/databaseEngine/src/mongoose/databaseEntity.ts
 import mongoose, { Document, Model } from 'mongoose';
 import { Logger } from '../logger/logger';
 import { CatchErrors } from '../decorateur/decorateur';
@@ -1325,7 +1350,7 @@ export abstract class DatabaseEntity<T extends Document>
 }
 
 
-# src//backend/database/src/middlewares/databaseEngine/src/mongoose/moongose.ts
+# src/backend/database/src/middlewares/databaseEngine/src/mongoose/moongose.ts
 import mongoose from 'mongoose';
 import dotenv from 'dotenv';
 import { Logger } from '../logger/logger';
@@ -1378,7 +1403,7 @@ export class Moongose
 }
 
 
-# src//backend/database/src/middlewares/databaseEngine/src/object_yourPieces/ItemShop.ts
+# src/backend/database/src/middlewares/databaseEngine/src/object_yourPieces/ItemShop.ts
 import { IBoutique } from '../mongoose/BoutiqueDB';
 import { boutiqueModel } from '../mongoose/BoutiqueDB';
 
@@ -1520,7 +1545,7 @@ export class ItemShop
 }
 
 
-# src//backend/database/src/middlewares/databaseEngine/src/object_yourPieces/Pokemon.ts
+# src/backend/database/src/middlewares/databaseEngine/src/object_yourPieces/Pokemon.ts
 import { IPokemon, pokemonModel } from "../mongoose/PokemonDB";
 
 /**
@@ -1634,7 +1659,7 @@ export class Pokemon
 }
 
 
-# src//backend/database/src/middlewares/databaseEngine/src/object_yourPieces/Transaction.ts
+# src/backend/database/src/middlewares/databaseEngine/src/object_yourPieces/Transaction.ts
 import { ITransaction } from '../mongoose/TransactionDB'; 
 import { transactionModel } from '../mongoose/TransactionDB';
 
@@ -1747,7 +1772,7 @@ export class Transaction
 }
 
 
-# src//backend/database/src/middlewares/databaseEngine/src/object_yourPieces/Users.ts
+# src/backend/database/src/middlewares/databaseEngine/src/object_yourPieces/Users.ts
 import { IUser } from '../mongoose/UserDB'; 
 import { userModel } from '../mongoose/UserDB';
 
@@ -1924,7 +1949,7 @@ export class User
 }
 
 
-# src//backend/database/src/routes/BoutiqueRoutes.ts
+# src/backend/database/src/routes/BoutiqueRoutes.ts
 import { Router } from 'express';
 import { GetBoutiqueItems } from '../controllers/BoutiqueControllers';
 
@@ -1935,18 +1960,19 @@ router.get('/items', GetBoutiqueItems);
 export default router;
 
 
-# src//backend/database/src/routes/PokemonRoutes.ts
+# src/backend/database/src/routes/PokemonRoutes.ts
 import { Router } from 'express';
-import { GetPokemon } from '../controllers/PokemonController';
+import { GetPokemon, UpdatePokemon } from '../controllers/PokemonController';
 
 const router = Router();
 
 router.post('/get', GetPokemon);
+router.post('/update', UpdatePokemon);
 
 export default router;
 
 
-# src//backend/database/src/routes/UserRoutes.ts
+# src/backend/database/src/routes/UserRoutes.ts
 import { Router } from 'express';
 import { Login, Register, RetrieveAll, SetImage, UpdateUserFromJSON } from '../controllers/UserControllers';
 import { validateRequestLogin, validateRequestRegister, validateRequestSetImage, validateRequestUpdateUser } from '../middlewares/ValidateRequest';
@@ -1961,7 +1987,7 @@ router.post('/getall', RetrieveAll);
 export default router;
 
 
-# src//backend/dockerServiceClient/app.ts
+# src/backend/dockerServiceClient/app.ts
 import express, { Request, Response } from 'express';
 import userRoutes from './src/routes/userRoutes';
 import pokemonRoutes from './src/routes/pokemonRoutes';
@@ -1988,7 +2014,7 @@ app.listen(port, () =>
 export default app;
 
 
-# src//backend/dockerServiceClient/src/controllers/PokemonController.ts
+# src/backend/dockerServiceClient/src/controllers/PokemonController.ts
 import { Request, Response } from 'express';
 import { GetPokemonDatabase } from '../services/PokemonService';
 
@@ -2013,7 +2039,7 @@ export const GetPokemon = async (req: Request, res: Response) =>
     }
 };
 
-# src//backend/dockerServiceClient/src/controllers/gamificationControllers.ts
+# src/backend/dockerServiceClient/src/controllers/gamificationControllers.ts
 import { Request, Response } from 'express';
 import { fetchLeaderboard, initiateBattle } from '../services/gamificationService';
 import { GetUserDatabase, UpdateUserDatabase } from '../services/userService';
@@ -2045,7 +2071,7 @@ export const runBattle = async (req: Request, res: Response) =>
 };
 
 
-# src//backend/dockerServiceClient/src/controllers/userController.ts
+# src/backend/dockerServiceClient/src/controllers/userController.ts
 import { Request, Response } from 'express';
 import { GetUserDatabase, GetJiraTickets, InitUserDB, InitAvatar, GetAllUserFromDB } from '../services/userService';
 
@@ -2128,7 +2154,7 @@ export const GetAllUser = async (req: Request, res: Response) =>
     }
 };
 
-# src//backend/dockerServiceClient/src/middlewares/validateRequest.ts
+# src/backend/dockerServiceClient/src/middlewares/validateRequest.ts
 import { Request, Response, NextFunction } from 'express';
 
 export const validateRequestGetUser = (req: Request, res: Response, next: NextFunction) => 
@@ -2168,7 +2194,7 @@ export const validateRequestGetPokemon = (req: Request, res: Response, next: Nex
     next();
 };
 
-# src//backend/dockerServiceClient/src/routes/gamificationRoutes.ts
+# src/backend/dockerServiceClient/src/routes/gamificationRoutes.ts
 // src/routes/gamificationRoutes.ts
 import { Router } from 'express';
 import { getLeaderboard, runBattle } from '../controllers/gamificationControllers';
@@ -2181,7 +2207,7 @@ router.post('/battle', runBattle);
 export default router;
 
 
-# src//backend/dockerServiceClient/src/routes/pokemonRoutes.ts
+# src/backend/dockerServiceClient/src/routes/pokemonRoutes.ts
 import { Router } from 'express';
 import {  validateRequestGetPokemon } from '../middlewares/validateRequest';
 import { GetPokemon } from '../controllers/PokemonController';
@@ -2191,7 +2217,7 @@ router.post('/get', validateRequestGetPokemon, GetPokemon);
 export default router;
 
 
-# src//backend/dockerServiceClient/src/routes/userRoutes.ts
+# src/backend/dockerServiceClient/src/routes/userRoutes.ts
 import { Router } from 'express';
 import { GetAllUser, GetUser, GetUserDashboard, InitUser } from '../controllers/userController';
 import { validateRequest, validateRequestGetUser, validateRequestInit } from '../middlewares/validateRequest';
@@ -2206,7 +2232,7 @@ router.post('/getAll', GetAllUser);
 export default router;
 
 
-# src//backend/dockerServiceClient/src/services/PokemonService.ts
+# src/backend/dockerServiceClient/src/services/PokemonService.ts
 import axios from 'axios';
 
 export const GetPokemonDatabase = async (username: string) => 
@@ -2215,7 +2241,7 @@ export const GetPokemonDatabase = async (username: string) =>
     return response.data;
 };
 
-# src//backend/dockerServiceClient/src/services/gamificationService.ts
+# src/backend/dockerServiceClient/src/services/gamificationService.ts
 import axios from 'axios';
 
 export const fetchLeaderboard = async () =>
@@ -2245,7 +2271,7 @@ export const initiateBattle = async () =>
 };
 
 
-# src//backend/dockerServiceClient/src/services/userService.ts
+# src/backend/dockerServiceClient/src/services/userService.ts
 import axios from 'axios';
 
 interface LoginInput 
@@ -2292,7 +2318,7 @@ export const UpdateUserDatabase = async (user : any) =>
     return response.data;
 };
 
-# src//backend/gamification/app.ts
+# src/backend/gamification/app.ts
 import express, { Request, Response } from 'express';
 import gamificationRoutes from './src/routes/gamificationRoutes';
 
@@ -2316,11 +2342,13 @@ app.listen(port, () =>
 export default app;
 
 
-# src//backend/gamification/src/controllers/GamificationController.ts
+# src/backend/gamification/src/controllers/GamificationController.ts
 import { Request, Response } from 'express';
-import { UpdateUser, fetchAllUsers, fetchUsers } from '../services/UserServices';
+import { UpdatePokemon, UpdateUser, fetchAllUsers, fetchUserPokemon, fetchUsers } from '../services/UserServices';
 import { BattleLogic } from '../middleware/BattleQuest';
+import dotenv from 'dotenv';
 
+dotenv.config();
 export const initializeLeaderboard = async (req: Request, res: Response) =>
 {
     try
@@ -2344,7 +2372,7 @@ export const initializeLeaderboard = async (req: Request, res: Response) =>
     }
 };
 
-export const handleBattleLogic = async (req: Request, res: Response) => 
+export const handleBattleLogic = async (req: Request, res: Response) =>
 {
     try
     {
@@ -2353,16 +2381,42 @@ export const handleBattleLogic = async (req: Request, res: Response) =>
         {
             const user1 = await fetchUsers(battle.user1);
             const user2 = await fetchUsers(battle.user2);
-            
+            const pokemon1 = await fetchUserPokemon(battle.user1);
+            const pokemon2 = await fetchUserPokemon(battle.user2);
+
+            const VICTORY_GAIN_GOLD = parseInt(process.env.VICTORY_GAIN_GOLD || '0', 10);
+            const VICTORY_GAIN_EXP = parseInt(process.env.VICTORY_GAIN_EXP || '0', 10);
+            const VICTORY_GAIN_LEVEL = parseInt(process.env.VICTORY_GAIN_LEVEL || '0', 10);
+            const VICTORY_GAIN_HAPPINESS = parseInt(process.env.VICTORY_GAIN_HAPPINESS || '0', 10);
+            const DEFEAT_GAIN_GOLD = parseInt(process.env.DEFEAT_GAIN_GOLD || '0', 10);
+            const DEFEAT_GAIN_EXP = parseInt(process.env.DEFEAT_GAIN_EXP || '0', 10);
+            const DEFEAT_LOSS_HAPPINESS = parseInt(process.env.DEFEAT_LOSS_HAPPINESS || '0', 10);
+
             if (battle.winner === user1.userInfo.username)
             {
                 user1.userInfo.gamification.victory.push(true);
+                user1.userInfo.gamification.gold.push(VICTORY_GAIN_GOLD);
+                user1.userInfo.gamification.exp.push(VICTORY_GAIN_EXP);
+                pokemon1.userInfo.gamification.level += VICTORY_GAIN_LEVEL; 
+                pokemon1.userInfo.gamification.happiness += VICTORY_GAIN_HAPPINESS; 
+
                 user2.userInfo.gamification.victory.push(false);
+                user2.userInfo.gamification.gold.push(DEFEAT_GAIN_GOLD);
+                user2.userInfo.gamification.exp.push(DEFEAT_GAIN_EXP);
+                pokemon2.userInfo.gamification.happiness -= DEFEAT_LOSS_HAPPINESS;
             }
             else
             {
-                user1.userInfo.gamification.victory.push(false);
                 user2.userInfo.gamification.victory.push(true);
+                user2.userInfo.gamification.gold.push(VICTORY_GAIN_GOLD);
+                user2.userInfo.gamification.exp.push(VICTORY_GAIN_EXP);
+                pokemon2.userInfo.gamification.level += VICTORY_GAIN_LEVEL; 
+                pokemon2.userInfo.gamification.happiness += VICTORY_GAIN_HAPPINESS; 
+
+                user1.userInfo.gamification.victory.push(false);
+                user1.userInfo.gamification.gold.push(DEFEAT_GAIN_GOLD);
+                user1.userInfo.gamification.exp.push(DEFEAT_GAIN_EXP);
+                pokemon1.userInfo.gamification.happiness -= DEFEAT_LOSS_HAPPINESS;
             }
 
             user1.userInfo.battleLog.push({
@@ -2377,6 +2431,8 @@ export const handleBattleLogic = async (req: Request, res: Response) =>
 
             await UpdateUser(user1.userInfo);
             await UpdateUser(user2.userInfo);
+            await UpdatePokemon(pokemon1.userInfo);
+            await UpdatePokemon(pokemon2.userInfo);
         }
         res.status(200).json(battleResults);
     }
@@ -2396,7 +2452,7 @@ export const checkEvolution = async (req: Request, res: Response) =>
 };
 
 
-# src//backend/gamification/src/middleware/BattleQuest.ts
+# src/backend/gamification/src/middleware/BattleQuest.ts
 // src/middleware/BattleLogic.ts
 import { fetchAllUsers, fetchUserPokemon } from '../services/UserServices';
 
@@ -2517,10 +2573,10 @@ export class BattleLogic
 }
 
 
-# src//backend/gamification/src/middleware/ValidateRequests.ts
+# src/backend/gamification/src/middleware/ValidateRequests.ts
 
 
-# src//backend/gamification/src/routes/gamificationRoutes.ts
+# src/backend/gamification/src/routes/gamificationRoutes.ts
 import { Router } from 'express';
 import { initializeLeaderboard, handleBattleLogic, checkEvolution } from './../controllers/GamificationController';
 
@@ -2533,8 +2589,7 @@ router.post('/check-evolution', checkEvolution);
 export default router;
 
 
-# src//backend/gamification/src/services/UserServices.ts
-// src/services/LeaderboardService.ts
+# src/backend/gamification/src/services/UserServices.ts
 import axios from 'axios';
 
 export const fetchAllUsers = async () =>
@@ -2578,7 +2633,21 @@ export const UpdateUser = async (user : any) =>
         console.error("UpdateUser error: ", error); // Log the error for debugging
     }
 };
-    
+export const UpdatePokemon = async (pokemon : any) =>
+{
+    try
+    {
+        const response = await axios.post('http://database:3000/api/pokemon/update', {
+            pokemon: pokemon
+        });
+        return response.data;
+    }
+    catch (error)
+    {
+        console.error("UpdatePokemon error: ", error); // Log the error for debugging
+    }
+};
+        
 export const fetchUserPokemon = async (username: string) =>
 {
     try
@@ -2593,7 +2662,7 @@ export const fetchUserPokemon = async (username: string) =>
 };
 
 
-# src//backend/imageService/app.ts
+# src/backend/imageService/app.ts
 import express from 'express';
 import imageRoutes from './src/routes/imageRoutes';
 import dotenv from 'dotenv';
@@ -2612,7 +2681,7 @@ app.listen(port, () =>
 export default app;
 
 
-# src//backend/imageService/src/controllers/EmployeeControllers.ts
+# src/backend/imageService/src/controllers/EmployeeControllers.ts
 import { Request, Response } from 'express';
 import { ImageProcessor } from '../middlewares/InitImageProcessor';
 import { SetUserPathImage } from '../services/ImageServices';
@@ -2635,7 +2704,7 @@ export const initNewEmployee = async (req: Request, res: Response) =>
 };
 
 
-# src//backend/imageService/src/controllers/ImageControllers.ts
+# src/backend/imageService/src/controllers/ImageControllers.ts
 import { Request, Response } from 'express';
 import * as path from 'path';
 import * as fs from 'fs';
@@ -2672,7 +2741,7 @@ export const GetAvatar = async (req: Request, res: Response) =>
 };
 
 
-# src//backend/imageService/src/middlewares/InitImageProcessor.ts
+# src/backend/imageService/src/middlewares/InitImageProcessor.ts
 import * as fs from 'fs';
 import * as path from 'path';
 import * as crypto from 'crypto';
@@ -2791,7 +2860,7 @@ export class ImageProcessor
 }
 
 
-# src//backend/imageService/src/middlewares/ValidateRequest.ts
+# src/backend/imageService/src/middlewares/ValidateRequest.ts
 import { Request, Response, NextFunction } from 'express';
 
 export const validateRequestGetAvatar = (req: Request, res: Response, next: NextFunction) => 
@@ -2813,7 +2882,7 @@ export const validateRequestInit = (req: Request, res: Response, next: NextFunct
     next();
 };
 
-# src//backend/imageService/src/routes/imageRoutes.ts
+# src/backend/imageService/src/routes/imageRoutes.ts
 import { Router } from 'express';
 import { initNewEmployee } from '../controllers/EmployeeControllers';
 import { GetAvatar } from '../controllers/ImageControllers';
@@ -2827,7 +2896,7 @@ router.post('/init', validateRequestInit, initNewEmployee);
 export default router;
 
 
-# src//backend/imageService/src/services/ImageServices.ts
+# src/backend/imageService/src/services/ImageServices.ts
 import axios from 'axios';
 
 interface PathInput 
@@ -2843,7 +2912,7 @@ export const SetUserPathImage = async (email: string, path: string | undefined) 
     return response.data;
 };
 
-# src//backend/metrics/app.ts
+# src/backend/metrics/app.ts
 import express,{ Request, Response } from 'express';
 import cors from 'cors';
 import JiraRoutes from './missionsJira/src/route'; 
@@ -2863,7 +2932,7 @@ app.listen(PORT, () => {
     console.log(`Server is running on port ${PORT}`);
 });
 
-# src//backend/metrics/missionsJira/src/jiraAPI/JiraAPI.ts
+# src/backend/metrics/missionsJira/src/jiraAPI/JiraAPI.ts
 // src/jiraAPI/JiraAPI.ts
 import axios from 'axios';
 import dotenv from 'dotenv';
@@ -2960,7 +3029,7 @@ export class JiraAPI
 }
 
 
-# src//backend/metrics/missionsJira/src/route.ts
+# src/backend/metrics/missionsJira/src/route.ts
 import { Router } from 'express';
 import { JiraActionFactory } from './ticketResponse/ticketFactory';
 import { JiraStatus } from './ticketResponse/JiraStatus';
@@ -2985,7 +3054,7 @@ router.post('/missions', async (req, res) =>
 export default router;
 
 
-# src//backend/metrics/missionsJira/src/ticketResponse/IJiraAction.ts
+# src/backend/metrics/missionsJira/src/ticketResponse/IJiraAction.ts
 // src/ticketResponse/IJiraAction.ts
 import { JiraTicket, JiraAPI } from './../jiraAPI/JiraAPI';
 
@@ -3053,7 +3122,7 @@ export {
 };
 
 
-# src//backend/metrics/missionsJira/src/ticketResponse/JiraStatus.ts
+# src/backend/metrics/missionsJira/src/ticketResponse/JiraStatus.ts
 // JiraStatusEnum.ts
 export enum JiraStatus
 {
@@ -3064,7 +3133,7 @@ export enum JiraStatus
 }
 
 
-# src//backend/metrics/missionsJira/src/ticketResponse/ticketFactory.ts
+# src/backend/metrics/missionsJira/src/ticketResponse/ticketFactory.ts
 // src/ticketResponse/ticketFactory.ts
 import {
     IJiraAction,
@@ -3097,7 +3166,7 @@ export class JiraActionFactory
 }
 
 
-# src//backend/metrics/missionsJira/test/test.ts
+# src/backend/metrics/missionsJira/test/test.ts
 // src/index.ts
 import { JiraActionFactory } from './../src/ticketResponse/ticketFactory';
 import { JiraStatus } from './../src/ticketResponse/JiraStatus';

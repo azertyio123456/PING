@@ -28,7 +28,7 @@ services:
 
   dockerserviceclient:
     build:
-      context: ./src/backend/dockerserviceclient
+      context: ./src/backend/dockerServiceClient
       dockerfile: Dockerfile
     ports:
       - "9000:9000"
