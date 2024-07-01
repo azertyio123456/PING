@@ -3,10 +3,10 @@ import { GetUserDatabase, GetJiraTickets, InitUserDB, InitAvatar, GetAllUserFrom
 
 export const GetUserDashboard = async (req: Request, res: Response) => 
 {
-    const { email } = req.body;
+    const { email, username } = req.body;
     try
     {
-        const userInfo = await GetUserDatabase(email);
+        const userInfo = await GetUserDatabase(username);
         const workInfo = await GetJiraTickets(email);
 
         const aggregatedData = 
