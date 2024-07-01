@@ -1,3123 +1,666 @@
-# src//backend/database/app.ts
-import express,{ Request, Response } from 'express';
-import cors from 'cors';
-import {Moongose} from './src/middlewares/databaseEngine/src/mongoose/moongose'
-import loginRoutes from './src/routes/UserRoutes'; 
-import boutiqueRoutes from './src/routes/BoutiqueRoutes';
-import pokemonRoutes from './src/routes/PokemonRoutes';
+# src/frontend//src/App.test.tsx
+import React from 'react';
+import { render, screen } from '@testing-library/react';
+import App from './App';
 
-
-const app = express();
-const PORT = process.env.PORT || 3000;
-
-app.use(cors());
-app.use(express.json());
-app.use('/api', loginRoutes);
-app.use('/api/boutique', boutiqueRoutes);
-app.use('/api/pokemon', pokemonRoutes);
-app.get('/health', (_: Request, res: Response) =>
-{
-    res.status(200).send('OK');
+test('renders learn react link', () => {
+  render(<App />);
+  const linkElement = screen.getByText(/learn react/i);
+  expect(linkElement).toBeInTheDocument();
 });
-Moongose.ConnectToDatabase().then(() => app.listen(PORT, () => console.log(`Server running on http://localhost:${PORT}`)));
 
-# src//backend/database/src/controllers/BoutiqueControllers.ts
-import { Request, Response } from 'express';
-import { BoutiqueDB } from '../middlewares/databaseEngine/src/mongoose/BoutiqueDB';
 
-export const GetBoutiqueItems = async (req: Request, res: Response) => 
-{
-    let boutiqueDb: BoutiqueDB = new BoutiqueDB();
-    try
-    {
-        await boutiqueDb.RetrieveAll();
-        const items = boutiqueDb.GetDocument();
+# src/frontend//src/App.tsx
+// src/App.tsx
+import React from 'react';
+import { BrowserRouter as Router, Route, Routes } from 'react-router-dom';
+import Dashboard from './Dashboard';
+import Leaderboard from './Leaderboard';
+import Profile from './Profil';
 
-        if (items?.length === 0)
-        {
-            res.status(404).json({ error: "No items found in the boutique!" });
-        }
-        else
-        {
-            res.status(200).json(items);
-        }
-    }
-    catch (error)
-    {
-        res.status(500).json({ error: "Internal server error." });
-    }
+const App: React.FC = () => {
+  return (
+    <Router>
+      <Routes>
+        <Route path="/" element={<Dashboard />} />
+        <Route path="/leaderboard" element={<Leaderboard />} />
+        <Route path="/profile" element={<Profile />} />
+      </Routes>
+    </Router>
+  );
 };
 
+export default App;
 
-# src//backend/database/src/controllers/PokemonController.ts
-import { Request, Response } from 'express';
-import { PokemonDB } from '../middlewares/databaseEngine/src/mongoose/PokemonDB';
 
-export const GetPokemon = async (req: Request, res: Response) => 
-{
-    const { username } = req.body;
-    let pokemonDb: PokemonDB = new PokemonDB();
-    try
-    {
-        await pokemonDb.RetrieveByCriteria({ username: username });
-        if (pokemonDb.GetDocument()?.length === 0)
-        {
-            res.status(404).json({ error: "Unknown username!" });
-        }
-        else
-        {
-            const pokemonDocument = pokemonDb.GetDocument();
+# src/frontend//src/Calendar.tsx
+// src/components/Calendar.tsx
+import React from 'react';
+import { Card, CardContent, Typography } from '@mui/material';
 
-            if (pokemonDocument && pokemonDocument.length > 0)
-            {
-                res.status(200).json(pokemonDocument[0]);
-            }
-            else
-            {
-                res.status(404).json({ error: "Pokemon not found" });
-            }
-        }
-    }
-    catch (error)
-    {
-        res.status(500).json({ error: "Internal server error." });
-    }
+const Calendar: React.FC = () => {
+  return (
+    <Card sx={{ background: 'rgba(33, 33, 33, 0.9)', color: '#fff' }}>
+      <CardContent>
+        <Typography variant="h6" sx={{ fontFamily: 'Orbitron, sans-serif' }}>
+          Calendrier
+        </Typography>
+        {/* Add calendar code here */}
+      </CardContent>
+    </Card>
+  );
 };
 
+export default Calendar;
 
-# src//backend/database/src/controllers/UserControllers.ts
-import { UserDB } from '../middlewares/databaseEngine/src/mongoose/UserDB';
-import { Request, Response } from 'express';
-import { User } from '../middlewares/databaseEngine/src/object_yourPieces/Users';
-import { Pokemon } from '../middlewares/databaseEngine/src/object_yourPieces/Pokemon';
-import { PokemonDB } from '../middlewares/databaseEngine/src/mongoose/PokemonDB';
 
-export const Login = async (req: Request, res: Response) => 
-{
-    const { username } = req.body;
-    console.log(username);
-    let userDb: UserDB = new UserDB();
-    try
-    {
-        await userDb.RetrieveByCriteria({ username: username });
-        if (userDb.GetDocument()?.length === 0)
-        {
-            res.status(404).json({ error: "Unknown Username!" });
-        }
-        else
-        {
-            if (username === userDb.GetUsername(0))
-            {
-                const userDocument = userDb.GetDocument();
+# src/frontend//src/CodeLines.tsx
+// src/components/CodeLines.tsx
+import React, { useEffect, useState } from 'react';
+import { Card, CardContent, Typography } from '@mui/material';
+import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from 'recharts';
 
-                if (userDocument && userDocument.length > 0)
-                {
-                    res.status(200).json(userDocument[0]);
-                }
-                await userDb.Update();
-            }
-            else
-            {
-                res.status(401).json({ error: "Username Do not exists" });
-            }
-        }
-    }
-    catch (error)
-    {
-        res.status(500).json({ error: "Internal server error." });
-    }
-};
-export const RetrieveAll = async (_: Request, res: Response) => 
-{
-    let userDb: UserDB = new UserDB();
-    try
-    {
-        await userDb.RetrieveAll();
-        if (userDb.GetDocument()?.length === 0)
-        {
-            res.status(404).json({ error: "No player found !" });
-        }
-        res.status(200).json(userDb.GetDocument());
-        userDb.Free();
-    }
-    catch (error)
-    {
-        res.status(500).json({ error: "Internal server error." });
-    }
-};
-    
-export const Register = async (req: Request, res: Response) =>
-    {
-        const { email, username } = req.body;
-        let userDb: UserDB = new UserDB();
-        const savedPokemon = new PokemonDB();
-        try
-        {
-            const userData =
-            {
-                username: username,
-                email: email,
-                gamification:
-                {
-                    competence: [],
-                    gold: [],
-                    exp: [],
-                    evolution_id: 0,
-                    path_image: "",
-                    lines_written: [],
-                    errors: [],
-                    victory: []
-                },
-                battleLog: []
-            };
-    
-            const pokemonData =
-            {
-                username: 'PikachuTrainer',
-                gamification:
-                {
-                    competences:
-                    {
-                        name: 'Thunderbolt',
-                        attack: 90,
-                        random: 10
-                    },
-                    level: 5,
-                    evolutionLevel: 2,
-                    hp: 35,
-                    attack: 55,
-                    happiness: 75
-                }
-            };
-    
-            const user = new User(
-                userData.username,
-                userData.email,
-                userData.gamification,
-                userData.battleLog
-            );
-    
-            const pokemon = new Pokemon(
-                userData.username,
-                pokemonData.gamification
-            );
-    
-            await userDb.SaveNewInstance(user.ToIUser());
-            await savedPokemon.SaveNewInstance(pokemon.ToIPokemon());
-    
-            res.status(200).json({ message: "User successfully registered !" });
-        }
-        catch (error)
-        {
-            res.status(500).json({ error: "Internal server error." });
-        }
-    };
-
-export const SetImage = async (req: Request, res: Response) => 
-{
-    const { email, path } = req.body;
-    let userDb: UserDB = new UserDB();
-    try
-    {
-        await userDb.RetrieveByCriteria({ email: email });
-        if (userDb.GetDocument()?.length === 0)
-        {
-            res.status(404).json({ error: "Unknown Username!" });
-        }
-        else
-        {
-            if (email === userDb.GetEmail(0))
-            {
-                userDb.SetPathImages(path, 0);
-                res.status(200).json({ message: "User successfully connected!" });
-                await userDb.Update();
-            }
-            else
-            {
-                res.status(401).json({ error: "Username Do not exists" });
-            }
-        }
-    }
-    catch (error)
-    {
-        res.status(500).json({ error: "Internal server error." });
-    }
+const generateRandomData = () => {
+  return Array.from({ length: 12 }, (_, i) => ({
+    name: `Month ${i + 1}`,
+    lines: Math.floor(Math.random() * 2000),
+  }));
 };
 
-export const UpdateUserFromJSON = async (req: Request, res: Response) =>
-{
-    const { email, gamification, battleLog } = req.body;
-    let userDb: UserDB = new UserDB();
+const CodeLines: React.FC = () => {
+  const [data, setData] = useState(generateRandomData());
 
-    try
-    {
-        await userDb.RetrieveByCriteria({ email: email });
-        if (userDb.GetDocument()?.length === 0)
-        {
-            res.status(404).json({ error: "Unknown User!" });
-        } 
-        else
-        {
-            if (email === userDb.GetEmail(0))
-            {
-                console.log(email);
-                console.log(gamification);
-                console.log(battleLog[0]);
-                userDb.SetGamification(gamification, 0);
-                userDb.SetBattleLog(battleLog, 0);
-                await userDb.Update();
-                res.status(200).json({ message: "User successfully updated!" });
-            } 
-            else
-            {
-                res.status(401).json({ error: "Email does not match any user" });
-            }
-        }
-    } 
-    catch (error)
-    {
-        res.status(500).json({ error: "Internal server error." });
-    }
+  useEffect(() => {
+    const interval = setInterval(() => {
+      setData(generateRandomData());
+    }, 5000);
+    return () => clearInterval(interval);
+  }, []);
+
+  return (
+    <Card sx={{ background: 'rgba(33, 33, 33, 0.9)', color: '#fff' }}>
+      <CardContent>
+        <Typography variant="h6" sx={{ fontFamily: 'Orbitron, sans-serif' }}>
+          Nombre de lignes ecrites
+        </Typography>
+        <ResponsiveContainer width="100%" height={300}>
+          <LineChart data={data} margin={{ top: 5, right: 30, left: 20, bottom: 5 }}>
+            <CartesianGrid strokeDasharray="3 3" />
+            <XAxis dataKey="name" />
+            <YAxis />
+            <Tooltip />
+            <Line type="monotone" dataKey="lines" stroke="#82ca9d" activeDot={{ r: 8 }} />
+          </LineChart>
+        </ResponsiveContainer>
+      </CardContent>
+    </Card>
+  );
 };
 
-# src//backend/database/src/middlewares/ValidateRequest.ts
-import { Request, Response, NextFunction } from 'express';
+export default CodeLines;
 
-export const validateRequestRegister = (req: Request, res: Response, next: NextFunction) => 
-{
-    const { email, username} = req.body;
-    if (!email || !username)
-    {
-        return res.status(400).json({ error: 'email and username is required to find images' });
-    }
-    next();
-};
-export const validateRequestLogin = (req: Request, res: Response, next: NextFunction) => 
-{
-    const { username } = req.body;
-    if (!username)
-    {
-        return res.status(400).json({ error: 'email is required to login' });
-    }
-    next();
-};
-export const validateRequestSetImage = (req: Request, res: Response, next: NextFunction) => 
-{
-    const { path, email } = req.body;
-    if (!path || !email)
-    {
-        return res.status(400).json({ error: 'email && path is required to setImage path' });
-    }
-    next();
-};
-export const validateRequestUpdateUser = (req: Request, res: Response, next: NextFunction) => 
-{
-    const { email, gamification } = req.body;
-    if (!email || !gamification)
-    {
-        return res.status(400).json({ error: 'email and gamification data are required to update user' });
-    }
-    next();
+
+# src/frontend//src/CompilationErrors.tsx
+// src/components/CompilationErrors.tsx
+import React, { useEffect, useState } from 'react';
+import { Card, CardContent, Typography } from '@mui/material';
+import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from 'recharts';
+
+const generateRandomData = () => {
+  return Array.from({ length: 12 }, (_, i) => ({
+    name: `Month ${i + 1}`,
+    errors: Math.floor(Math.random() * 50),
+  }));
 };
 
-# src//backend/database/src/middlewares/databaseEngine/src/decorateur/decorateur.ts
-import { Logger } from '../logger/logger';
+const CompilationErrors: React.FC = () => {
+  const [data, setData] = useState(generateRandomData());
 
-/**
- * A decorator to catch and log errors for asynchronous methods within a class.
- * @template T - This generic represents the function type being decorated.
- * @param target - The constructor function of the class for the instance member.
- * @param propertyName - The name of the method being decorated.
- * @param descriptor - The property descriptor for the method.
- * @returns {void} Modifies the descriptor in-place to wrap the original method with error handling.
- */
-export function CatchErrors<T extends (...args: any[]) => Promise<any>>(
-    target: Object, 
-    propertyName: string, 
-    descriptor: TypedPropertyDescriptor<T>
-)
-{
-    // Original method retrieved from the descriptor.
-    const originalMethod = descriptor.value;
+  useEffect(() => {
+    const interval = setInterval(() => {
+      setData(generateRandomData());
+    }, 5000);
+    return () => clearInterval(interval);
+  }, []);
 
-    if (!originalMethod)
-    {
-        throw new Error("No method found for the decorator to apply.");
-    }
+  return (
+    <Card sx={{ background: 'rgba(33, 33, 33, 0.9)', color: '#fff' }}>
+      <CardContent>
+        <Typography variant="h6" sx={{ fontFamily: 'Orbitron, sans-serif' }}>
+          Compilation erreurs
+        </Typography>
+        <ResponsiveContainer width="100%" height={300}>
+          <LineChart data={data} margin={{ top: 5, right: 30, left: 20, bottom: 5 }}>
+            <CartesianGrid strokeDasharray="3 3" />
+            <XAxis dataKey="name" />
+            <YAxis />
+            <Tooltip />
+            <Line type="monotone" dataKey="errors" stroke="#ff7300" activeDot={{ r: 8 }} />
+          </LineChart>
+        </ResponsiveContainer>
+      </CardContent>
+    </Card>
+  );
+};
 
-    // Replacing the original method with a new async function that includes try-catch logic.
-    descriptor.value = async function(this: any, ...args: any[])
-    {
-        try
-        {
-            // Executing the original method and logging the success case.
-            const result = await originalMethod.apply(this, args);
-            Logger.success(`${propertyName} finished well.`);
-            return result;
-        } 
-        catch (error)
-        {
-            // Logging the error case before re-throwing the error.
-            Logger.error(`${propertyName} failed: ${error}`);
-            throw error;
-        }
-    } as T;
+export default CompilationErrors;
+
+
+# src/frontend//src/Dashboard.tsx
+// src/pages/Dashboard.tsx
+import React from 'react';
+import { Grid } from '@mui/material';
+import Layout from './Layout';
+import ExperienceChart from './ExperienceChart';
+import CompilationErrors from './CompilationErrors';
+import CodeLines from './CodeLines';
+import Calendar from './Calendar';
+import Missions from './Missions';
+import WinsLosses from './WinsLosses';
+import GoldEarned from './GoldEarned';
+
+import { GetDashboard } from './Services/userService';
+
+// Function to call GetDashboard and log the result
+const logDashboard = async () => {
+  const result = await GetDashboard("MAXIMUS");
+  console.log("Get Dashboard: ", result);
+};
+
+// Call the logDashboard function
+logDashboard();
+
+const Dashboard: React.FC = () => {
+  return (
+    <Layout>
+      <Grid container spacing={3}>
+        <Grid item xs={12}>
+          <ExperienceChart />
+        </Grid>
+        <Grid item xs={6}>
+          <CompilationErrors />
+        </Grid>
+        <Grid item xs={6}>
+          <CodeLines />
+        </Grid>
+        <Grid item xs={12}>
+          <Calendar />
+        </Grid>
+        <Grid item xs={12}>
+          <Missions />
+        </Grid>
+        <Grid item xs={6}>
+          <WinsLosses />
+        </Grid>
+        <Grid item xs={6}>
+          <GoldEarned />
+        </Grid>
+      </Grid>
+    </Layout>
+  );
+};
+
+export default Dashboard;
+
+
+# src/frontend//src/ExperienceChart.tsx
+// src/components/ExperienceChart.tsx
+import React, { useEffect, useState } from 'react';
+import { Card, CardContent, Typography } from '@mui/material';
+import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from 'recharts';
+
+
+const generateRandomData = () => {
+  return Array.from({ length: 12 }, (_, i) => ({
+    name: `Month ${i + 1}`,
+    exp: Math.floor(Math.random() * 100),
+  }));
+};
+
+const ExperienceChart: React.FC = () => {
+  const [data, setData] = useState(generateRandomData());
+
+  useEffect(() => {
+    const interval = setInterval(() => {
+      setData(generateRandomData());
+    }, 5000);
+    return () => clearInterval(interval);
+  }, []);
+
+  return (
+    <Card sx={{ background: 'rgba(33, 33, 33, 0.9)', color: '#fff' }}>
+      <CardContent>
+        <Typography variant="h6" sx={{ fontFamily: 'Orbitron, sans-serif' }}>
+          Nombre d'Exp gagné
+        </Typography>
+        <ResponsiveContainer width="100%" height={300}>
+          <LineChart data={data} margin={{ top: 5, right: 30, left: 20, bottom: 5 }}>
+            <CartesianGrid strokeDasharray="3 3" />
+            <XAxis dataKey="name" />
+            <YAxis />
+            <Tooltip />
+            <Line type="monotone" dataKey="exp" stroke="#8884d8" activeDot={{ r: 8 }} />
+          </LineChart>
+        </ResponsiveContainer>
+      </CardContent>
+    </Card>
+  );
+};
+
+export default ExperienceChart;
+
+
+# src/frontend//src/GoldEarned.tsx
+// src/components/GoldEarned.tsx
+import React, { useEffect, useState } from 'react';
+import { Card, CardContent, Typography } from '@mui/material';
+
+const generateRandomData = () => Math.floor(Math.random() * 1000);
+
+const GoldEarned: React.FC = () => {
+  const [gold, setGold] = useState(generateRandomData());
+
+  useEffect(() => {
+    const interval = setInterval(() => {
+      setGold(generateRandomData());
+    }, 5000);
+    return () => clearInterval(interval);
+  }, []);
+
+  return (
+    <Card sx={{ background: 'rgba(33, 33, 33, 0.9)', color: '#fff' }}>
+      <CardContent>
+        <Typography variant="h6" sx={{ fontFamily: 'Orbitron, sans-serif' }}>
+          Nombre de gold gagné 24H
+        </Typography>
+        <Typography variant="h4" mt={2} sx={{ color: '#FFD700' }}>
+          {gold}
+        </Typography>
+      </CardContent>
+    </Card>
+  );
+};
+
+export default GoldEarned;
+
+
+# src/frontend//src/Layout.tsx
+// src/components/Layout.tsx
+import React, { ReactNode } from 'react';
+import { AppBar, Toolbar, Typography, Container, Box, Button } from '@mui/material';
+import { Link } from 'react-router-dom';
+
+interface LayoutProps {
+  children: ReactNode;
 }
 
+const Layout: React.FC<LayoutProps> = ({ children }) => {
+  return (
+    <Box sx={{ display: 'flex', flexDirection: 'column', minHeight: '100vh' }}>
+      <AppBar position="static" sx={{ background: 'rgba(0, 0, 0, 0.8)' }}>
+        <Toolbar>
+          <Typography variant="h6" sx={{ fontFamily: 'Orbitron, sans-serif', letterSpacing: 2 }}>
+            Game Dashboard
+          </Typography>
+          <Box sx={{ flexGrow: 1 }} />
+          <Button color="inherit" component={Link} to="/">
+            Accueil
+          </Button>
+          <Button color="inherit" component={Link} to="/leaderboard">
+            LeaderBoard
+          </Button>
+          <Button color="inherit" component={Link} to="/profile">
+            Profil
+          </Button>
+        </Toolbar>
+      </AppBar>
+      <Container sx={{ flex: 1, py: 3 }}>
+        {children}
+      </Container>
+    </Box>
+  );
+};
 
-# src//backend/database/src/middlewares/databaseEngine/src/logger/logger.ts
-import { createLogger, format, transports } from 'winston';
-import 'winston-mongodb';
-import dotenv from 'dotenv';
+export default Layout;
 
-dotenv.config();
 
-/**
- * Provides static methods to log messages with different levels of importance and colors to the console.
- * Additionally logs messages to MongoDB for persistent storage.
- */
-export class Logger
+# src/frontend//src/Leaderboard.tsx
+// src/pages/Leaderboard.tsx
+import React from 'react';
+import { Card, CardContent, Typography, Table, TableBody, TableCell, TableContainer, TableHead, TableRow, Box, Paper } from '@mui/material';
+import Layout from './Layout';
+import { styled } from '@mui/system';
+
+const leaderboardData = [
+  { id: 1, name: 'GUNNER', score: 5000 },
+  { id: 2, name: 'BLADER', score: 4500 },
+  { id: 3, name: 'SNIPER', score: 4000 },
+  // Add more players as needed
+];
+
+const StyledTableCell = styled(TableCell)({
+  color: '#fff',
+  fontFamily: 'Orbitron, sans-serif',
+  fontSize: '1rem',
+  borderBottom: '1px solid rgba(255, 255, 255, 0.2)',
+});
+
+const StyledTableRow = styled(TableRow)({
+  '&:nth-of-type(odd)': {
+    backgroundColor: 'rgba(255, 255, 255, 0.1)',
+  },
+  '&:hover': {
+    backgroundColor: 'rgba(255, 255, 255, 0.2)',
+  },
+});
+
+const Leaderboard: React.FC = () => {
+  return (
+    <Layout>
+      <Card sx={{ background: 'linear-gradient(135deg, #1e1e1e, #121212)', color: '#fff', minHeight: '70vh', borderRadius: 2, boxShadow: '0 10px 20px rgba(0, 0, 0, 0.5)' }}>
+        <CardContent>
+          <Typography variant="h4" align="center" sx={{ fontFamily: 'Orbitron, sans-serif', mb: 3, color: '#FFD700' }}>
+            LeaderBoard
+          </Typography>
+          <TableContainer component={Paper} sx={{ background: 'rgba(255, 255, 255, 0.1)' }}>
+            <Table>
+              <TableHead>
+                <TableRow>
+                  <StyledTableCell align="center">Rank</StyledTableCell>
+                  <StyledTableCell align="center">Player</StyledTableCell>
+                  <StyledTableCell align="center">Score</StyledTableCell>
+                </TableRow>
+              </TableHead>
+              <TableBody>
+                {leaderboardData.map((player, index) => (
+                  <StyledTableRow key={player.id}>
+                    <StyledTableCell align="center">{index + 1}</StyledTableCell>
+                    <StyledTableCell align="center">{player.name}</StyledTableCell>
+                    <StyledTableCell align="center">{player.score}</StyledTableCell>
+                  </StyledTableRow>
+                ))}
+              </TableBody>
+            </Table>
+          </TableContainer>
+        </CardContent>
+      </Card>
+    </Layout>
+  );
+};
+
+export default Leaderboard;
+
+
+# src/frontend//src/Missions.tsx
+// src/components/Missions.tsx
+import React from 'react';
+import { Card, CardContent, Typography, List, ListItem, ListItemText, ListItemIcon, LinearProgress, Box } from '@mui/material';
+import WorkIcon from '@mui/icons-material/Work';
+
+const missions = [
+  { id: 78546, exp: 15, progress: 50 },
+  { id: 78547, exp: 30, progress: 75 },
+  // Add more missions as needed
+];
+
+const Missions: React.FC = () => {
+  return (
+    <Card sx={{ background: 'rgba(33, 33, 33, 0.9)', color: '#fff' }}>
+      <CardContent>
+        <Typography variant="h6" sx={{ fontFamily: 'Orbitron, sans-serif' }}>
+          Missions
+        </Typography>
+        <List>
+          {missions.map((mission) => (
+            <ListItem key={mission.id}>
+              <ListItemIcon>
+                <WorkIcon sx={{ color: '#fff' }} />
+              </ListItemIcon>
+              <ListItemText
+                primary={`Finir ticket #${mission.id}`}
+                secondary={
+                  <Box>
+                    {`${mission.exp} exp`}
+                    <LinearProgress variant="determinate" value={mission.progress} sx={{ mt: 1 }} />
+                  </Box>
+                }
+              />
+            </ListItem>
+          ))}
+        </List>
+      </CardContent>
+    </Card>
+  );
+};
+
+export default Missions;
+
+
+# src/frontend//src/Profil.tsx
+// src/pages/Profil.tsx
+import React from 'react';
+import { Card, CardContent, Typography, Box, Grid, Avatar, Paper, LinearProgress } from '@mui/material';
+import Layout from './Layout';
+import profileImage from './assets/profil.webp';
+import itemImage1 from './assets/profil.webp';
+import itemImage2 from './assets/profil.webp';
+import itemImage3 from './assets/profil.webp';
+import itemImage4 from './assets/profil.webp';
+import itemImage5 from './assets/profil.webp';
+
+const items = [
+  { name: 'Sword of Destiny', icon: itemImage1 },
+  { name: 'Shield of Valor', icon: itemImage2 },
+  { name: 'Potion of Healing', icon: itemImage3 },
+  { name: 'Ring of Power', icon: itemImage4 },
+  { name: 'Magic Wand', icon: itemImage5 },
+];
+
+const Profile: React.FC = () => {
+  return (
+    <Layout>
+      <Card
+        sx={{
+          background: 'linear-gradient(135deg, #1e1e1e, #121212)',
+          color: '#fff',
+          minHeight: '70vh',
+          borderRadius: 2,
+          boxShadow: '0 10px 20px rgba(0, 0, 0, 0.5)',
+          p: 3,
+        }}
+      >
+        <CardContent>
+          <Typography
+            variant="h4"
+            align="center"
+            sx={{ fontFamily: 'Orbitron, sans-serif', mb: 3, color: '#FFD700' }}
+          >
+            Profil
+          </Typography>
+          <Grid container spacing={3}>
+            <Grid item xs={12} sm={4}>
+              <Box display="flex" justifyContent="center" alignItems="center" flexDirection="column">
+                <Avatar src={profileImage} sx={{ width: 150, height: 150, mb: 2 }} />
+                <Typography variant="h6">sei_dnl</Typography>
+                <Typography variant="body1">Level: 20</Typography>
+                <Box width="100%" mt={1}>
+                  <Typography variant="body2">Health</Typography>
+                  <LinearProgress variant="determinate" value={80} sx={{ height: 10, borderRadius: 5 }} />
+                </Box>
+              </Box>
+            </Grid>
+            <Grid item xs={12} sm={4}>
+              <Box display="flex" justifyContent="center">
+                <img
+                  src={profileImage}
+                  alt="Avatar"
+                  style={{ borderRadius: '10px', maxHeight: '400px', maxWidth: '100%', border: '2px solid #FFD700' }}
+                />
+              </Box>
+            </Grid>
+            <Grid item xs={12} sm={4}>
+              <Box display="flex" justifyContent="center" alignItems="center" flexDirection="column" gap={2}>
+                <Box width="100%">
+                  <Typography variant="body2">XP</Typography>
+                  <LinearProgress variant="determinate" value={(1500 / 2000) * 100} sx={{ height: 10, borderRadius: 5, mb: 1 }} />
+                  <Typography variant="body2">1500 / 2000</Typography>
+                </Box>
+                <Box width="100%">
+                  <Typography variant="body2" sx={{ color: '#FFD700' }}>Gold</Typography>
+                  <Typography variant="h5" sx={{ color: '#FFD700' }}>300</Typography>
+                </Box>
+                <Box width="100%">
+                  <Typography variant="body2" sx={{ color: '#4caf50' }}>Wins</Typography>
+                  <Typography variant="h5" sx={{ color: '#4caf50' }}>45</Typography>
+                </Box>
+                <Box width="100%">
+                  <Typography variant="body2" sx={{ color: '#f44336' }}>Losses</Typography>
+                  <Typography variant="h5" sx={{ color: '#f44336' }}>10</Typography>
+                </Box>
+              </Box>
+            </Grid>
+            <Grid item xs={12}>
+              <Paper
+                sx={{
+                  p: 2,
+                  mt: 2,
+                  display: 'flex',
+                  justifyContent: 'space-around',
+                  background: 'rgba(255, 255, 255, 0.1)',
+                  color: '#fff',
+                  borderRadius: 2,
+                }}
+              >
+                {items.map((item, index) => (
+                  <Box key={index} display="flex" flexDirection="column" alignItems="center">
+                    <Avatar src={item.icon} sx={{ width: 56, height: 56, mb: 1 }} />
+                    <Typography variant="body2" align="center">
+                      {item.name}
+                    </Typography>
+                  </Box>
+                ))}
+              </Paper>
+            </Grid>
+          </Grid>
+        </CardContent>
+      </Card>
+    </Layout>
+  );
+};
+
+export default Profile;
+
+
+# src/frontend//src/Services/userService.ts
+import axios from 'axios';
+
+export const GetDashboard = async (username: string) => 
 {
-    /**
-     * ANSI escape code to reset the console color.
-     */
-    private static RESET = '\x1b[0m';
+    const loginInput = { username };
 
-    /**
-     * ANSI escape code for red color, used for errors.
-     */
-    private static RED = '\x1b[31m';
+    try
+    {
+        const response = await axios.post('http://dockerserviceclient:9000/api/user-dashboard', loginInput);
+        return response.data;   
+    }
+    catch (error)
+    {
+        console.log(error)
+    }
+    
+};
 
-    /**
-     * ANSI escape code for green color, used for successes.
-     */
-    private static GREEN = '\x1b[32m';
+# src/frontend//src/WinsLosses.tsx
+// src/components/WinsLosses.tsx
+import React, { useEffect, useState } from 'react';
+import { Card, CardContent, Typography, Box } from '@mui/material';
 
-    /**
-     * ANSI escape code for yellow color, used for warnings.
-     */
-    private static YELLOW = '\x1b[33m';
+const generateRandomData = () => ({
+  wins: Math.floor(Math.random() * 10),
+  losses: Math.floor(Math.random() * 10),
+});
 
-    /**
-     * ANSI escape code for blue color, used for informational messages.
-     */
-    private static BLUE = '\x1b[34m';
+const WinsLosses: React.FC = () => {
+  const [data, setData] = useState(generateRandomData());
 
-    /**
-     * Winston logger instance configured to log to console and MongoDB.
-     */
-    private static logger = createLogger({
-        level: 'info', // Default logging level
-        format: format.combine(
-            format.timestamp(),
-            format.json()
-        ),
-        transports: [
-            new transports.Console({
-                format: format.combine(
-                    format.colorize(),
-                    format.simple()
-                )
-            }),
-            new transports.MongoDB({
-                db: process.env.MONGODB_URI as string,
-                options: { useUnifiedTopology: true },
-                collection: 'logs',
-                level: 'info'
-            })
-        ]
+  useEffect(() => {
+    const interval = setInterval(() => {
+      setData(generateRandomData());
+    }, 5000);
+    return () => clearInterval(interval);
+  }, []);
+
+  return (
+    <Card sx={{ background: 'rgba(33, 33, 33, 0.9)', color: '#fff' }}>
+      <CardContent>
+        <Typography variant="h6" sx={{ fontFamily: 'Orbitron, sans-serif' }}>
+          Victoires / Défaites 24H
+        </Typography>
+        <Box display="flex" justifyContent="space-around" alignItems="center" mt={2}>
+          <Typography variant="h4" color="green">
+            {data.wins}
+          </Typography>
+          <Typography variant="h4" color="red">
+            {data.losses}
+          </Typography>
+        </Box>
+      </CardContent>
+    </Card>
+  );
+};
+
+export default WinsLosses;
+
+
+# src/frontend//src/index.tsx
+import React from 'react';
+import ReactDOM from 'react-dom/client';
+import './index.css';
+import App from './App';
+import reportWebVitals from './reportWebVitals';
+
+const root = ReactDOM.createRoot(
+  document.getElementById('root') as HTMLElement
+);
+root.render(
+  <React.StrictMode>
+    <App />
+  </React.StrictMode>
+);
+
+// If you want to start measuring performance in your app, pass a function
+// to log results (for example: reportWebVitals(console.log))
+// or send to an analytics endpoint. Learn more: https://bit.ly/CRA-vitals
+reportWebVitals();
+
+
+# src/frontend//src/react-app-env.d.ts
+/// <reference types="react-scripts" />
+
+
+# src/frontend//src/reportWebVitals.ts
+import { ReportHandler } from 'web-vitals';
+
+const reportWebVitals = (onPerfEntry?: ReportHandler) => {
+  if (onPerfEntry && onPerfEntry instanceof Function) {
+    import('web-vitals').then(({ getCLS, getFID, getFCP, getLCP, getTTFB }) => {
+      getCLS(onPerfEntry);
+      getFID(onPerfEntry);
+      getFCP(onPerfEntry);
+      getLCP(onPerfEntry);
+      getTTFB(onPerfEntry);
     });
-
-    /**
-     * Logs an informational message to the console with blue text and MongoDB.
-     * @param message - The message to log.
-     */
-    static info(message: string)
-    {
-        console.log(`${Logger.BLUE}${message}${Logger.RESET}`);
-        Logger.logger.info(message);
-    }
-
-    /**
-     * Logs a success message to the console with green text and MongoDB.
-     * @param message - The message to log.
-     */
-    static success(message: string)
-    {
-        console.log(`${Logger.GREEN}${message}${Logger.RESET}`);
-        Logger.logger.info(message);
-    }
-
-    /**
-     * Logs a warning message to the console with yellow text and MongoDB.
-     * @param message - The message to log.
-     */
-    static warning(message: string)
-    {
-        console.log(`${Logger.YELLOW}${message}${Logger.RESET}`);
-        Logger.logger.warn(message);
-    }
-
-    /**
-     * Logs an error message to the console with red text and MongoDB.
-     * @param message - The message to log.
-     */
-    static error(message: string)
-    {
-        console.log(`${Logger.RED}${message}${Logger.RESET}`);
-        Logger.logger.error(message);
-    }
-}
-
-
-# src//backend/database/src/middlewares/databaseEngine/src/mongoose/BoutiqueDB.ts
-import { DatabaseEntity } from './databaseEntity';
-import mongoose, { Document, Schema } from 'mongoose';
-const AutoIncrement = require('mongoose-sequence')(mongoose);
-
-/**
- * Interface for the Boutique model.
- */
-export interface IBoutique extends Document {
-    _id: number | undefined;
-    name: string;
-    cost: number;
-    picture: string;
-    reward: {
-        exp?: number;
-        competence?: string[];
-    };
-}
-
-/**
- * Schema definition for the Boutique model.
- */
-const boutiqueSchema: Schema<IBoutique> = new Schema(
-{
-    _id: { type: Number },
-    name: { type: String, required: true },
-    cost: { type: Number, required: true },
-    picture: { type: String, required: true },
-    reward: {
-        exp: { type: Number, default: 0 },
-        competence: { type: [String], default: [] }
-    }
-}, 
-{
-    _id: false,
-    timestamps: true
-});
-
-// Apply AutoIncrement plugin to boutiqueSchema
-boutiqueSchema.plugin(AutoIncrement, { inc_field: '_id', id: 'boutique_counter' });
-
-// Compile model from schema
-export const boutiqueModel = mongoose.model<IBoutique>('Boutique', boutiqueSchema);
-/**
- * Database operations class for Boutique entities.
- */
-export class BoutiqueDB extends DatabaseEntity<IBoutique>
-{
-    constructor()
-    {
-        super(boutiqueModel);
-    }
-
-    /**
-     * Retrieves the name of an item at a specific index in the loaded documents.
-     * @param index Index of the item in the loaded documents array.
-     * @returns The name of the item if found, otherwise undefined.
-     */
-    GetName(index: number): string | undefined
-    {
-        return this.document?.at(index)?.name;
-    }
-
-    /**
-     * Updates the name of an item at a specific index in the loaded documents.
-     * @param name New name to set.
-     * @param index Index of the item in the loaded documents array.
-     */
-    SetName(name: string, index: number): void
-    {
-        const doc = this.document?.[index];
-        if (doc)
-        {
-            doc.name = name;
-        }
-    }
-
-    /**
-     * Retrieves the cost of an item at a specific index in the loaded documents.
-     * @param index Index of the item in the loaded documents array.
-     * @returns The cost of the item if found, otherwise undefined.
-     */
-    GetCost(index: number): number | undefined
-    {
-        return this.document?.at(index)?.cost;
-    }
-
-    /**
-     * Updates the cost of an item at a specific index in the loaded documents.
-     * @param cost New cost to set.
-     * @param index Index of the item in the loaded documents array.
-     */
-    SetCost(cost: number, index: number): void
-    {
-        const doc = this.document?.[index];
-        if (doc)
-        {
-            doc.cost = cost;
-        }
-    }
-
-    /**
-     * Retrieves the picture URL of an item at a specific index in the loaded documents.
-     * @param index Index of the item in the loaded documents array.
-     * @returns The picture URL if found, otherwise undefined.
-     */
-    GetPicture(index: number): string | undefined
-    {
-        return this.document?.at(index)?.picture;
-    }
-
-    /**
-     * Updates the picture URL of an item at a specific index in the loaded documents.
-     * @param picture New picture URL to set.
-     * @param index Index of the item in the loaded documents array.
-     */
-    SetPicture(picture: string, index: number): void
-    {
-        const doc = this.document?.[index];
-        if (doc)
-        {
-            doc.picture = picture;
-        }
-    }
-
-    /**
-     * Retrieves the reward of an item at a specific index in the loaded documents.
-     * @param index Index of the item in the loaded documents array.
-     * @returns The reward object if found, otherwise undefined.
-     */
-    GetReward(index: number): any | undefined
-    {
-        return this.document?.at(index)?.reward;
-    }
-
-    /**
-     * Updates the reward of an item at a specific index in the loaded documents.
-     * @param reward New reward to set.
-     * @param index Index of the item in the loaded documents array.
-     */
-    SetReward(reward: any, index: number): void
-    {
-        const doc = this.document?.[index];
-        if (doc)
-        {
-            doc.reward = reward;
-        }
-    }
-}
-
-# src//backend/database/src/middlewares/databaseEngine/src/mongoose/PokemonDB.ts
-import mongoose, { Document, Schema } from 'mongoose';
-import { DatabaseEntity } from './databaseEntity';
-
-export interface IPokemon extends Document
-{
-    _id: number | undefined;
-    username: string;
-    gamification:
-    {
-        level: number;
-        evolutionLevel: number;
-        competences:
-        {
-            name: string;
-            attack: number;
-            random: number;
-        };
-        hp: number;
-        happiness: number;
-    };
-}
-
-const pokemonSchema: Schema<IPokemon> = new Schema(
-{
-    _id: { type: Number },
-    username: { type: String, required: true },
-    gamification:
-    {
-        level: { type: Number, required: true, default: 1 },
-        evolutionLevel: { type: Number, required: true },
-        competences: 
-        { 
-            name: { type: String, required: true }, 
-            attack: { type: Number, required: true },
-            random: { type: Number, required: true }
-        },
-        hp: { type: Number, required: true },
-        happiness: { type: Number, required: true }
-    }
-}, 
-{
-    _id: false,
-    timestamps: true
-});
-    
-const AutoIncrement = require('mongoose-sequence')(mongoose);
-pokemonSchema.plugin(AutoIncrement, { inc_field: '_id', id: 'pokemon_counter' });
-
-export const pokemonModel = mongoose.model<IPokemon>('Pokemon', pokemonSchema);
-
-export class PokemonDB extends DatabaseEntity<IPokemon>
-{
-    constructor()
-    {
-        super(pokemonModel);
-    }
-
-    GetName(index: number): string | undefined
-    {
-        return this.document?.at(index)?.username;
-    }
-
-    GetGamification(index: number): any | undefined
-    {
-        return this.document?.at(index)?.gamification;
-    }
-
-    SetGamification(gamification: any, index: number): void
-    {
-        const doc = this.document?.[index];
-        if (doc)
-        {
-            doc.gamification = gamification;
-        }
-    }
-}
-
-
-# src//backend/database/src/middlewares/databaseEngine/src/mongoose/TransactionDB.ts
-import mongoose, { Document, Schema } from 'mongoose';
-import { DatabaseEntity } from './databaseEntity';
-const AutoIncrement = require('mongoose-sequence')(mongoose);
-
-/**
- * Interface for the Transaction model.
- */
-export interface ITransaction extends Document {
-    _id: number | undefined;
-    user_id: number;
-    item_id: number;
-    date: Date;
-}
-
-/**
- * Schema definition for the Transaction model.
- */
-const transactionSchema: Schema<ITransaction> = new Schema(
-{
-    _id: { type: Number },
-    user_id: { type: Number, required: true, ref: 'User' },
-    item_id: { type: Number, required: true, ref: 'Boutique' },
-    date: { type: Date, default: Date.now }
-}, 
-{
-    _id: false,
-    timestamps: true
-});
-
-// Apply AutoIncrement plugin to transactionSchema
-transactionSchema.plugin(AutoIncrement, { inc_field: '_id', id: 'transaction_counter' });
-
-// Compile model from schema
-export const transactionModel = mongoose.model<ITransaction>('Transaction', transactionSchema);
-
-/**
- * Database operations class for Transaction entities.
- */
-export class TransactionDB extends DatabaseEntity<ITransaction>
-{
-    constructor()
-    {
-        super(transactionModel);
-    }
-
-    /**
-     * Retrieves the user ID of a transaction at a specific index in the loaded documents.
-     * @param index Index of the transaction in the loaded documents array.
-     * @returns The user ID if found, otherwise undefined.
-     */
-    GetUserID(index: number): number | undefined
-    {
-        return this.document?.at(index)?.user_id;
-    }
-
-    /**
-     * Updates the user ID of a transaction at a specific index in the loaded documents.
-     * @param user_id New user ID to set.
-     * @param index Index of the transaction in the loaded documents array.
-     */
-    SetUserID(user_id: number, index: number): void
-    {
-        const doc = this.document?.[index];
-        if (doc)
-        {
-            doc.user_id = user_id;
-        }
-    }
-
-    /**
-     * Retrieves the item ID of a transaction at a specific index in the loaded documents.
-     * @param index Index of the transaction in the loaded documents array.
-     * @returns The item ID if found, otherwise undefined.
-     */
-    GetItemID(index: number): number | undefined
-    {
-        return this.document?.at(index)?.item_id;
-    }
-
-    /**
-     * Updates the item ID of a transaction at a specific index in the loaded documents.
-     * @param item_id New item ID to set.
-     * @param index Index of the transaction in the loaded documents array.
-     */
-    SetItemID(item_id: number, index: number): void
-    {
-        const doc = this.document?.[index];
-        if (doc)
-        {
-            doc.item_id = item_id;
-        }
-    }
-
-    /**
-     * Retrieves the date of a transaction at a specific index in the loaded documents.
-     * @param index Index of the transaction in the loaded documents array.
-     * @returns The date of the transaction if found, otherwise undefined.
-     */
-    GetDate(index: number): Date | undefined
-    {
-        return this.document?.at(index)?.date;
-    }
-
-    /**
-     * Updates the date of a transaction at a specific index in the loaded documents.
-     * @param date New date to set.
-     * @param index Index of the transaction in the loaded documents array.
-     */
-    SetDate(date: Date, index: number): void
-    {
-        const doc = this.document?.[index];
-        if (doc)
-        {
-            doc.date = date;
-        }
-    }
-}
-
-
-# src//backend/database/src/middlewares/databaseEngine/src/mongoose/UserDB.ts
-// src/middlewares/databaseEngine/src/mongoose/UserDB.ts
-import { DatabaseEntity } from './databaseEntity';
-import mongoose, { Document, Schema } from 'mongoose';
-const AutoIncrement = require('mongoose-sequence')(mongoose);
-
-interface BattleLogEntry
-{
-    turn: number;
-    pokemon1:
-    {
-        name: string;
-        hp: number;
-        attack: boolean;
-    };
-    pokemon2:
-    {
-        name: string;
-        hp: number;
-        attack: boolean;
-    };
-}
-
-interface Battle
-{
-    date: Date;
-    logs: BattleLogEntry[];
-}
-
-/**
- * Interface for the User model.
- */
-export interface IUser extends Document
-{
-    _id: number | undefined;
-    username: string;
-    email: string;
-    gamification:
-    {
-        competence: string[];
-        gold: number[];
-        exp: number[];
-        evolution_id: number;
-        path_image: string;
-        lines_written: number[];
-        errors: number[];
-        victory: boolean[];
-    };
-    battleLog: Battle[];
-}
-
-/**
- * Schema definition for the User model.
- */
-const userSchema: Schema<IUser> = new Schema(
-{
-    _id: { type: Number },
-    username: { type: String, required: true, unique: true },
-    email: { type: String, required: true, unique: true },
-    gamification:
-    {
-        competence: { type: [String], default: [] },
-        gold: { type: [Number], default: [] },
-        exp: { type: [Number], default: [] },
-        evolution_id: { type: Number },
-        path_image: { type: String },
-        lines_written: { type: [Number], default: [] },
-        errors: { type: [Number], default: [] },
-        victory: { type: [Boolean], default: [] }
-    },
-    battleLog: [
-        {
-            date: { type: Date },
-            logs: [
-                {
-                    turn: { type: Number },
-                    pokemon1:
-                    {
-                        name: { type: String },
-                        hp: { type: Number },
-                        attack: { type: Boolean }
-                    },
-                    pokemon2:
-                    {
-                        name: { type: String },
-                        hp: { type: Number},
-                        attack: { type: Boolean }
-                    }
-                }
-            ]
-        }
-    ]
-},
-{
-    _id: false,
-    timestamps: { createdAt: 'inscriptionDate', updatedAt: 'lastConnexion' }
-});
-
-// Apply AutoIncrement plugin to userSchema
-userSchema.plugin(AutoIncrement, { inc_field: '_id', id: 'user_counter' });
-
-// Create indexes for email and username fields
-userSchema.index({ email: 1, username: 1 }, { unique: true });
-
-// Compile model from schema
-export const userModel = mongoose.model<IUser>('User', userSchema);
-
-/**
- * Database operations class for User entities, extending generic DatabaseEntity class.
- */
-export class UserDB extends DatabaseEntity<IUser>
-{
-    constructor()
-    {
-        super(userModel);
-    }
-
-    GetEmail(index: number): string | undefined
-    {
-        return this.document?.at(index)?.email;
-    }
-
-    SetEmail(email: string, index: number): void
-    {
-        const doc = this.document?.[index];
-        if (doc)
-        {
-            doc.email = email;
-        }
-    }
-
-    GetUsername(index: number): string | undefined
-    {
-        return this.document?.at(index)?.username;
-    }
-
-    SetUsername(username: string, index: number): void
-    {
-        const doc = this.document?.[index];
-        if (doc)
-        {
-            doc.username = username;
-        }
-    }
-
-    GetGamification(index: number): any | undefined
-    {
-        return this.document?.at(index)?.gamification;
-    }
-
-    SetGamification(gamification: any, index: number): void
-    {
-        const doc = this.document?.[index];
-        if (doc)
-        {
-            doc.gamification = gamification;
-        }
-    }
-
-    GetCompetence(index: number): string[] | undefined
-    {
-        return this.document?.at(index)?.gamification.competence;
-    }
-
-    SetCompetence(competence: string[], index: number): void
-    {
-        const doc = this.document?.[index];
-        if (doc)
-        {
-            doc.gamification.competence = competence;
-        }
-    }
-
-    GetEvolutionID(index: number): number | undefined
-    {
-        return this.document?.at(index)?.gamification.evolution_id;
-    }
-
-    SetEvolutionID(evolution_id: number, index: number): void
-    {
-        const doc = this.document?.[index];
-        if (doc)
-        {
-            doc.gamification.evolution_id = evolution_id;
-        }
-    }
-
-    GetPathImages(index: number): string | undefined
-    {
-        return this.document?.at(index)?.gamification.path_image;
-    }
-
-    SetPathImages(path_image: string, index: number): void
-    {
-        const doc = this.document?.[index];
-        if (doc)
-        {
-            doc.gamification.path_image = path_image;
-        }
-    }
-
-    GetLinesWritten(index: number): number[] | undefined
-    {
-        return this.document?.at(index)?.gamification.lines_written;
-    }
-
-    SetLinesWritten(lines: number[], index: number): void
-    {
-        const doc = this.document?.[index];
-        if (doc)
-        {
-            doc.gamification.lines_written = lines;
-        }
-    }
-
-    GetErrors(index: number): number[] | undefined
-    {
-        return this.document?.at(index)?.gamification.errors;
-    }
-
-    SetErrors(errors: number[], index: number): void
-    {
-        const doc = this.document?.[index];
-        if (doc)
-        {
-            doc.gamification.errors = errors;
-        }
-    }
-
-    GetGold(index: number): number[] | undefined
-    {
-        return this.document?.at(index)?.gamification.gold;
-    }
-
-    SetGold(gold: number[], index: number): void
-    {
-        const doc = this.document?.[index];
-        if (doc)
-        {
-            doc.gamification.gold = gold;
-        }
-    }
-
-    GetExp(index: number): number[] | undefined
-    {
-        return this.document?.at(index)?.gamification.exp;
-    }
-
-    SetExp(exp: number[], index: number): void
-    {
-        const doc = this.document?.[index];
-        if (doc)
-        {
-            doc.gamification.exp = exp;
-        }
-    }
-
-    GetVictory(index: number): boolean[] | undefined
-    {
-        return this.document?.at(index)?.gamification.victory;
-    }
-
-    SetVictory(victory: boolean[], index: number): void
-    {
-        const doc = this.document?.[index];
-        if (doc)
-        {
-            doc.gamification.victory = victory;
-        }
-    }
-
-    GetBattleLog(index: number): Battle[] | undefined
-    {
-        return this.document?.at(index)?.battleLog;
-    }
-
-    SetBattleLog(battlelog: Battle[], index: number): void
-    {
-        const doc = this.document?.[index];
-        if (doc)
-        {
-            doc.battleLog = battlelog;
-        }
-    }
-}
-
-
-# src//backend/database/src/middlewares/databaseEngine/src/mongoose/databaseEntity.ts
-import mongoose, { Document, Model } from 'mongoose';
-import { Logger } from '../logger/logger';
-import { CatchErrors } from '../decorateur/decorateur';
-import { error } from 'console';
-import { FilterQuery } from 'mongoose';
-
-/**
- * Enumeration for sort directions used in database queries.
- */
-export enum SortDirection
-{
-    HIGHER_TO_LOWER = -1,
-    LOWER_TO_HIGHER = 1
-}
-
-/**
- * Abstract class to define common properties and methods for database entities.
- * @template T Extends mongoose Document indicating the type of the model document.
- */
-export abstract class DatabaseEntity<T extends Document>
-{
-    /**
-     * The mongoose model associated with the entity.
-     */
-    protected model: Model<T>;
-
-    /**
-     * Active document instances loaded by the entity.
-     */
-    protected document?: T[];
-
-    /**
-     * Initializes a new instance of the DatabaseEntity class with a mongoose model.
-     * @param model The mongoose model to use for database operations.
-     */
-    constructor(model: Model<T>)
-    {
-        this.model = model;
-        this.document = [];
-    }
-
-    /**
-     * Retrieves a document by its ID and stores it if found.
-     * @param id The ID of the document to retrieve.
-     */
-    @CatchErrors
-    async RetrieveOneById(id: number)
-    {
-        const document = await this.model.findById(id).exec();
-        if (document)
-        {
-            this.document?.push(document);
-            Logger.success("Document retrieved: " + JSON.stringify(document));
-        }
-        else
-        {
-            Logger.error('Error retrieving document by ID.');
-            Logger.info("Make sure the ID exists");
-            throw error;
-        }
-    }
-
-    /**
-     * Saves a new instance of a document in the database.
-     * @param object The document object to save.
-     */
-    @CatchErrors
-    async SaveNewInstance(object: T): Promise<void>
-    {
-        if (!this.model)
-        {
-            throw new Error("No model defined");
-        }
-
-        const savedDocument = await new this.model(object).save();
-        Logger.success('Document saved successfully.');
-        Logger.info("Saved document: " + JSON.stringify(savedDocument));
-    }
-
-    /**
-     * Updates and saves all loaded documents and clears them after saving.
-     */
-    @CatchErrors
-    async UpdateAndClean(): Promise<void>
-    {
-        if (!this.document)
-        {
-            throw new Error("No document loaded");
-        }
-
-        for (let i = 0; i < this.document.length; i++)
-        {
-            await this.document[i].save();
-            Logger.success('Document updated and saved successfully.');
-        }
-
-        this.document = [];
-    }
-
-    /**
-     * Updates and saves all loaded documents.
-     */
-    @CatchErrors
-    async Update(): Promise<void>
-    {
-        if (!this.document)
-        {
-            throw new Error("No document loaded");
-        }
-
-        for (let i = 0; i < this.document.length; i++)
-        {
-            await this.document[i].save();
-            Logger.success('Document updated and saved successfully.');
-        }
-    }
-
-    /**
-     * Retrieves all documents of the model.
-     */
-    @CatchErrors
-    async RetrieveAll()
-    {
-        const document = await this.model.find().exec();
-        if (document)
-        {
-            this.document = document;
-            Logger.success("Documents retrieved successfully.");
-        }
-        else
-        {
-            Logger.error('Error retrieving documents.');
-            Logger.info("Make sure the Model Exists or your URI is correct");
-            throw error;
-        }
-    }
-
-    /**
-     * Retrieves documents based on the specified criteria.
-     * @param criteria The criteria to use for retrieving documents.
-     */
-    @CatchErrors
-    async RetrieveByCriteria(criteria: FilterQuery<T>)
-    {
-        const document = await this.model.find(criteria).exec();
-        if (document && document.length > 0)
-        {
-            this.document = document;
-            Logger.success("Documents retrieved successfully.");
-        }
-        else
-        {
-            Logger.error("No documents match the provided criteria.");
-            this.document = [];  // Assurez-vous que this.document est vide
-        }
-    }
-
-    /**
-     * Retrieves and sorts documents based on the given criteria and sort directive.
-     * @param sort The sort direction and fields.
-     * @param criteria The criteria to filter documents (optional).
-     */
-    @CatchErrors
-    async RetrievedAndSort(sort: { [key: string]: 1 | -1 }, criteria: FilterQuery<T> = {})
-    {
-        const documents = await this.model.find(criteria).sort(sort).exec();
-        if (documents.length > 0)
-        {
-            this.document = documents;
-            Logger.success("Documents retrieved and sorted successfully.");
-        }
-        else
-        {
-            Logger.info("No documents found matching the criteria and sort conditions.");
-        }
-    }
-
-    /**
-     * Retrieves documents with pagination.
-     * @param skip The number of documents to skip.
-     * @param limit The limit on the number of documents to return.
-     * @param criteria The criteria to filter documents (optional).
-     */
-    async FindWithPagination(skip: number, limit: number, criteria: FilterQuery<T> = {})
-    {
-        if (limit <= 0)
-        {
-            Logger.error("Limit must be greater than 0. Provided limit: " + limit);
-            return;
-        }
-
-        const documents = await this.model.find(criteria).skip(skip).limit(limit).exec();
-        if (documents.length > 0)
-        {
-            this.document = documents;
-            Logger.success("Documents retrieved with pagination successfully.");
-        }
-        else
-        {
-            Logger.info("No documents found matching the criteria with the specified pagination.");
-        }
-    }
-
-    /**
-     * Gets the currently loaded documents.
-     * @returns An array of documents or undefined if no documents are loaded.
-     */
-    GetDocument(): T[] | undefined
-    {
-        return this.document;
-    }
-    Free(): void
-    {
-        this.document = [];
-    }
-}
-
-
-# src//backend/database/src/middlewares/databaseEngine/src/mongoose/moongose.ts
-import mongoose from 'mongoose';
-import dotenv from 'dotenv';
-import { Logger } from '../logger/logger';
-import { CatchErrors } from '../decorateur/decorateur';
-
-// Load environment variables from .env file
-dotenv.config();
-
-/**
- * Manages database connections using mongoose. It supports connecting and disconnecting from the MongoDB server.
- */
-export class Moongose 
-{
-    public static isConnected: boolean = false;
-
-    /**
-     * Connects to the MongoDB database using the URI provided in the environment variables.
-     */
-    @CatchErrors
-    public static async ConnectToDatabase(): Promise<void> 
-    {
-        if (this.isConnected) 
-        {
-            Logger.info('Already connected to database.');
-            return;
-        }
-
-        const uri: string = process.env.MONGODB_URI as string;
-        Logger.info(uri);
-        await mongoose.connect(uri);
-        this.isConnected = true;
-        Logger.info('Database connection established.');
-    }
-
-    /**
-     * Disconnects from the MongoDB database.
-     */
-    @CatchErrors
-    public static async DisconnectFromDatabase(): Promise<void> 
-    {
-        if (!this.isConnected) 
-        {
-            Logger.info('No active database connection to disconnect.');
-            return;
-        }
-        await mongoose.disconnect();
-        this.isConnected = false;
-        Logger.info('Database connection closed.');
-    }
-}
-
-
-# src//backend/database/src/middlewares/databaseEngine/src/object_yourPieces/ItemShop.ts
-import { IBoutique } from '../mongoose/BoutiqueDB';
-import { boutiqueModel } from '../mongoose/BoutiqueDB';
-
-/**
- * Class representing a boutique item with properties and methods to manipulate item data.
- */
-export class ItemShop
-{
-    private _id: number | undefined;
-    private name: string;
-    private cost: number;
-    private picture: string;
-    private reward: {
-        exp?: number;
-        competence?: string[];
-    };
-
-    /**
-     * Constructs a Boutique instance with provided values.
-     * @param name - Name of the item.
-     * @param cost - Cost of the item.
-     * @param picture - Picture URL of the item.
-     * @param reward - Reward for the item.
-     * @param id - Item ID (optional, default undefined).
-     */
-    constructor(
-        name: string,
-        cost: number,
-        picture: string,
-        reward: {
-            exp?: number;
-            competence?: string[];
-        },
-        id?: number
-    )
-    {
-        this._id = id;
-        this.name = name;
-        this.cost = cost;
-        this.picture = picture;
-        this.reward = reward;
-    }
-
-    /**
-     * Gets the ID of the item.
-     * @returns Item's ID.
-     */
-    GetID(): number | undefined
-    {
-        return this._id;
-    }
-
-    /**
-     * Gets the name of the item.
-     * @returns Item's name.
-     */
-    GetName(): string
-    {
-        return this.name;
-    }
-
-    /**
-     * Sets the name of the item.
-     * @param name - New name to set.
-     */
-    SetName(name: string): void
-    {
-        this.name = name;
-    }
-
-    /**
-     * Gets the cost of the item.
-     * @returns Item's cost.
-     */
-    GetCost(): number
-    {
-        return this.cost;
-    }
-
-    /**
-     * Sets the cost of the item.
-     * @param cost - New cost to set.
-     */
-    SetCost(cost: number): void
-    {
-        this.cost = cost;
-    }
-
-    /**
-     * Gets the picture URL of the item.
-     * @returns Item's picture URL.
-     */
-    GetPicture(): string
-    {
-        return this.picture;
-    }
-
-    /**
-     * Sets the picture URL of the item.
-     * @param picture - New picture URL to set.
-     */
-    SetPicture(picture: string): void
-    {
-        this.picture = picture;
-    }
-
-    /**
-     * Gets the reward of the item.
-     * @returns Item's reward.
-     */
-    GetReward(): any
-    {
-        return this.reward;
-    }
-
-    /**
-     * Sets the reward of the item.
-     * @param reward - New reward to set.
-     */
-    SetReward(reward: any): void
-    {
-        this.reward = reward;
-    }
-
-    /**
-     * Converts the Boutique instance to a IBoutique interface type, for use with mongoose operations.
-     * @returns The IBoutique object ready for database operations.
-     */
-    ToIBoutique(): IBoutique
-    {
-        return new boutiqueModel({
-            _id: this._id,
-            name: this.name,
-            cost: this.cost,
-            picture: this.picture,
-            reward: this.reward
-        });
-    }
-}
-
-
-# src//backend/database/src/middlewares/databaseEngine/src/object_yourPieces/Pokemon.ts
-import { IPokemon, pokemonModel } from "../mongoose/PokemonDB";
-
-/**
- * Class representing a Pokémon with properties and methods to manipulate Pokémon data.
- */
-export class Pokemon
-{
-    private _id: number | undefined;
-    private username: string;
-    private gamification:
-    {
-        level: number;
-        evolutionLevel: number;
-        competences:
-        {
-            name: string;
-            attack: number;
-            random: number;
-        };
-        hp: number;
-        attack: number;
-        happiness: number;
-    };
-
-    /**
-     * Constructs a Pokémon instance with provided values.
-     * @param username - User's username.
-     * @param gamification - User's gamification data.
-     * @param id - User's ID (optional, default undefined).
-     */
-    constructor(
-        username: string,
-        gamification:
-        {
-            level: number;
-            evolutionLevel: number;
-            competences:
-            {
-                name: string;
-                attack: number;
-                random: number;
-            };
-            hp: number;
-            attack: number;
-            happiness: number;
-        },
-        id?: number
-    ) {
-        this._id = id;
-        this.username = username;
-        this.gamification = gamification;
-    }
-
-    /**
-     * Gets the ID of the Pokémon.
-     * @returns Pokémon's ID.
-     */
-    GetID(): number | undefined
-    {
-        return this._id;
-    }
-
-    /**
-     * Gets the username of the Pokémon.
-     * @returns Pokémon's username.
-     */
-    GetUsername(): string
-    {
-        return this.username;
-    }
-
-    /**
-     * Sets the username of the Pokémon.
-     * @param username - New username to set.
-     */
-    SetUsername(username: string): void
-    {
-        this.username = username;
-    }
-
-    /**
-     * Gets the gamification data of the Pokémon.
-     * @returns Pokémon's gamification data.
-     */
-    GetGamification(): any
-    {
-        return this.gamification;
-    }
-
-    /**
-     * Sets the gamification data of the Pokémon.
-     * @param gamification - New gamification data to set.
-     */
-    SetGamification(gamification: any): void
-    {
-        this.gamification = gamification;
-    }
-
-    /**
-     * Converts the Pokémon instance to an IPokemon interface type, for use with mongoose operations.
-     * @returns The IPokemon object ready for database operations.
-     */
-    ToIPokemon(): IPokemon
-    {
-        return new pokemonModel({
-            _id: this._id,
-            username: this.username,
-            gamification: this.gamification
-        });
-    }
-}
-
-
-# src//backend/database/src/middlewares/databaseEngine/src/object_yourPieces/Transaction.ts
-import { ITransaction } from '../mongoose/TransactionDB'; 
-import { transactionModel } from '../mongoose/TransactionDB';
-
-/**
- * Class representing a transaction with properties and methods to manipulate transaction data.
- */
-export class Transaction
-{
-    private _id: number | undefined;
-    private user_id: number;
-    private item_id: number;
-    private date: Date;
-
-    /**
-     * Constructs a Transaction instance with provided values, with defaults for optional properties.
-     * @param user_id - ID of the user making the transaction.
-     * @param item_id - ID of the item being purchased.
-     * @param date - Date of the transaction (optional, default now).
-     * @param id - Transaction ID (optional, default undefined).
-     */
-    constructor(
-        user_id: number,
-        item_id: number,
-        date?: Date,
-        id?: number
-    )
-    {
-        this._id = id;
-        this.user_id = user_id;
-        this.item_id = item_id;
-        this.date = date || new Date();
-    }
-
-    /**
-     * Gets the ID of the transaction.
-     * @returns Transaction ID.
-     */
-    GetID(): number | undefined
-    {
-        return this._id;
-    }
-
-    /**
-     * Gets the user ID of the transaction.
-     * @returns User ID.
-     */
-    GetUserID(): number
-    {
-        return this.user_id;
-    }
-
-    /**
-     * Sets the user ID of the transaction.
-     * @param user_id - New user ID to set.
-     */
-    SetUserID(user_id: number): void
-    {
-        this.user_id = user_id;
-    }
-
-    /**
-     * Gets the item ID of the transaction.
-     * @returns Item ID.
-     */
-    GetItemID(): number
-    {
-        return this.item_id;
-    }
-
-    /**
-     * Sets the item ID of the transaction.
-     * @param item_id - New item ID to set.
-     */
-    SetItemID(item_id: number): void
-    {
-        this.item_id = item_id;
-    }
-
-    /**
-     * Gets the date of the transaction.
-     * @returns Date of the transaction.
-     */
-    GetDate(): Date
-    {
-        return this.date;
-    }
-
-    /**
-     * Sets the date of the transaction.
-     * @param date - New date to set.
-     */
-    SetDate(date: Date): void
-    {
-        this.date = date;
-    }
-
-    /**
-     * Converts the Transaction instance to a ITransaction interface type, for use with mongoose operations.
-     * @returns The ITransaction object ready for database operations.
-     */
-    ToITransaction(): ITransaction
-    {
-        return new transactionModel({
-            _id: this._id,
-            user_id: this.user_id,
-            item_id: this.item_id,
-            date: this.date
-        });
-    }
-}
-
-
-# src//backend/database/src/middlewares/databaseEngine/src/object_yourPieces/Users.ts
-import { IUser } from '../mongoose/UserDB'; 
-import { userModel } from '../mongoose/UserDB';
-
-interface BattleLogEntry
-{
-    turn: number;
-    pokemon1:
-    {
-        name: string;
-        hp: number;
-        attack: boolean;
-    };
-    pokemon2:
-    {
-        name: string;
-        hp: number;
-        attack: boolean;
-    };
-}
-
-interface Battle
-{
-    date: Date;
-    logs: BattleLogEntry[];
-}
-
-/**
- * Class representing a user with properties and methods to manipulate user data.
- */
-export class User
-{
-    private _id: number | undefined;
-    private username: string;
-    private email: string;
-    private gamification: {
-        competence: string[];
-        gold: number[];
-        exp: number[];
-        evolution_id: number;
-        path_image: string;
-        lines_written: number[];
-        errors: number[];
-        victory: boolean[];
-    };
-    private battleLog: Battle[];
-
-    /**
-     * Constructs a User instance with provided values.
-     * @param username - User's username.
-     * @param email - User's email address.
-     * @param gamification - User's gamification data.
-     * @param battleLog - User's battle log data.
-     * @param id - User's ID (optional, default undefined).
-     */
-    constructor(
-        username: string,
-        email: string,
-        gamification: {
-            competence: string[];
-            gold: number[];
-            exp: number[];
-            evolution_id: number;
-            path_image: string;
-            lines_written: number[];
-            errors: number[];
-            victory: boolean[];
-        },
-        battleLog: Battle[],
-        id?: number
-    )
-    {
-        this._id = id;
-        this.username = username;
-        this.email = email;
-        this.gamification = gamification;
-        this.battleLog = battleLog;
-    }
-
-    /**
-     * Gets the ID of the user.
-     * @returns User's ID.
-     */
-    GetID(): number | undefined
-    {
-        return this._id;
-    }
-
-    /**
-     * Gets the username of the user.
-     * @returns User's username.
-     */
-    GetUsername(): string
-    {
-        return this.username;
-    }
-
-    /**
-     * Sets the username of the user.
-     * @param username - New username to set.
-     */
-    SetUsername(username: string): void
-    {
-        this.username = username;
-    }
-
-    /**
-     * Gets the email of the user.
-     * @returns User's email address.
-     */
-    GetEmail(): string
-    {
-        return this.email;
-    }
-
-    /**
-     * Sets the email of the user.
-     * @param email - New email address to set.
-     */
-    SetEmail(email: string): void
-    {
-        this.email = email;
-    }
-
-    /**
-     * Gets the gamification data of the user.
-     * @returns User's gamification data.
-     */
-    GetGamification(): any
-    {
-        return this.gamification;
-    }
-
-    /**
-     * Sets the gamification data of the user.
-     * @param gamification - New gamification data to set.
-     */
-    SetGamification(gamification: any): void
-    {
-        this.gamification = gamification;
-    }
-
-    /**
-     * Gets the battle log of the user.
-     * @returns User's battle log.
-     */
-    GetBattleLog(): Battle[]
-    {
-        return this.battleLog;
-    }
-
-    /**
-     * Sets the battle log of the user.
-     * @param battleLog - New battle log to set.
-     */
-    SetBattleLog(battleLog: Battle[]): void
-    {
-        this.battleLog = battleLog;
-    }
-
-    /**
-     * Converts the User instance to a IUser interface type, for use with mongoose operations.
-     * @returns The IUser object ready for database operations.
-     */
-    ToIUser(): IUser
-    {
-        return new userModel({
-            _id: this._id,
-            username: this.username,
-            email: this.email,
-            gamification: this.gamification,
-            battleLog: this.battleLog
-        });
-    }
-}
-
-
-# src//backend/database/src/routes/BoutiqueRoutes.ts
-import { Router } from 'express';
-import { GetBoutiqueItems } from '../controllers/BoutiqueControllers';
-
-const router = Router();
-
-router.get('/items', GetBoutiqueItems);
-
-export default router;
-
-
-# src//backend/database/src/routes/PokemonRoutes.ts
-import { Router } from 'express';
-import { GetPokemon } from '../controllers/PokemonController';
-
-const router = Router();
-
-router.post('/get', GetPokemon);
-
-export default router;
-
-
-# src//backend/database/src/routes/UserRoutes.ts
-import { Router } from 'express';
-import { Login, Register, RetrieveAll, SetImage, UpdateUserFromJSON } from '../controllers/UserControllers';
-import { validateRequestLogin, validateRequestRegister, validateRequestSetImage, validateRequestUpdateUser } from '../middlewares/ValidateRequest';
-
-const router = Router();
-
-router.post('/login', validateRequestLogin, Login);
-router.post('/register', validateRequestRegister, Register);
-router.post('/setimagepath', validateRequestSetImage, SetImage)
-router.post('/update', validateRequestUpdateUser, UpdateUserFromJSON);
-router.post('/getall', RetrieveAll);
-export default router;
-
-
-# src//backend/dockerServiceClient/app.ts
-import express, { Request, Response } from 'express';
-import userRoutes from './src/routes/userRoutes';
-import pokemonRoutes from './src/routes/pokemonRoutes';
-import gamificationRoutes from './src/routes/gamificationRoutes';  // Importation des nouvelles routes
-import dotenv from 'dotenv';
-
-dotenv.config();
-
-const port = process.env.PORT;
-const app = express();
-app.use(express.json());
-app.use('/api', userRoutes);
-app.use('/api/pokemon', pokemonRoutes);
-app.use('/api/gamification', gamificationRoutes);  // Utilisation des nouvelles routes
-app.get('/health', (_: Request, res: Response) =>
-    {
-        res.status(200).send('OK');
-    });
-app.listen(port, () => 
-    {
-        console.log(`BFF service running on port ${port}`);
-    });
-
-export default app;
-
-
-# src//backend/dockerServiceClient/src/controllers/PokemonController.ts
-import { Request, Response } from 'express';
-import { GetPokemonDatabase } from '../services/PokemonService';
-
-export const GetPokemon = async (req: Request, res: Response) => 
-{
-    const { username } = req.body;
-    try
-    {
-        const userInfo = await GetPokemonDatabase(username);
-
-        const aggregatedData = 
-        {
-            userInfo
-        };
-
-        res.json(aggregatedData);
-    }
-    catch (error)
-    {
-        console.error('Error fetching data:', error);
-        res.status(500).json({ error: 'Failed to fetch data' });
-    }
+  }
 };
 
-# src//backend/dockerServiceClient/src/controllers/gamificationControllers.ts
-import { Request, Response } from 'express';
-import { fetchLeaderboard, initiateBattle } from '../services/gamificationService';
-import { GetUserDatabase, UpdateUserDatabase } from '../services/userService';
-
-export const getLeaderboard = async (req: Request, res: Response) =>
-{
-    try
-    {
-        const leaderboard = await fetchLeaderboard();
-        res.status(200).json(leaderboard);
-    }
-    catch (error)
-    {
-        res.status(500).json({ error: 'Failed to fetch leaderboard' });
-    }
-};
-
-export const runBattle = async (req: Request, res: Response) =>
-{
-    try
-    {
-        await initiateBattle();
-        res.status(200).json({message: "Battle succeed"});
-    }
-    catch (error)
-    {
-        res.status(500).json({ error: 'Failed to run battles' });
-    }
-};
-
-
-# src//backend/dockerServiceClient/src/controllers/userController.ts
-import { Request, Response } from 'express';
-import { GetUserDatabase, GetJiraTickets, InitUserDB, InitAvatar, GetAllUserFromDB } from '../services/userService';
-
-export const GetUserDashboard = async (req: Request, res: Response) => 
-{
-    const { email } = req.body;
-    try
-    {
-        const userInfo = await GetUserDatabase(email);
-        const workInfo = await GetJiraTickets(email);
-
-        const aggregatedData = 
-        {
-            userInfo,
-            workInfo
-        };
-
-        res.json(aggregatedData);
-    }
-    catch (error)
-    {
-        console.error('Error fetching data:', error);
-        res.status(500).json({ error: 'Failed to fetch data' });
-    }
-};
-export const InitUser = async (req: Request, res: Response) => 
-{
-    const {email , username } = req.body;
-
-    if (!email)
-    {
-        return res.status(400).json({ error: 'Email required' });
-    }
-
-    try
-    {
-        await InitUserDB(email, username);
-        await InitAvatar(email);
-
-        res.status(200).json({ message: 'New Employee Initialise' });
-    }
-    catch (error)
-    {
-        console.error('Error fetching data:', error);
-        res.status(500).json({ error: 'Failed to fetch data' });
-    }
-};
-export const GetUser = async (req: Request, res: Response) => 
-{
-    const { username } = req.body;
-    try
-    {
-        const userInfo = await GetUserDatabase(username);
-
-        const aggregatedData = 
-        {
-            userInfo
-        };
-
-        res.json(aggregatedData);
-    }
-    catch (error)
-    {
-        console.error('Error fetching data:', error);
-        res.status(500).json({ error: 'Failed to fetch data' });
-    }
-};
-export const GetAllUser = async (req: Request, res: Response) => 
-{
-    try
-    {
-        const userInfo = await GetAllUserFromDB();
-
-        res.json(userInfo);
-    }
-    catch (error)
-    {
-        console.error('Error fetching data:', error);
-        res.status(500).json({ error: 'Failed to fetch data' });
-    }
-};
-
-# src//backend/dockerServiceClient/src/middlewares/validateRequest.ts
-import { Request, Response, NextFunction } from 'express';
-
-export const validateRequestGetUser = (req: Request, res: Response, next: NextFunction) => 
-{
-    const { username } = req.body;
-    if (!username)
-    {
-        return res.status(400).json({ error: 'Username required' });
-    }
-    next();
-};
-export const validateRequest = (req: Request, res: Response, next: NextFunction) => 
-    {
-        const { email } = req.body;
-        if (!email)
-        {
-            return res.status(400).json({ error: 'Email required' });
-        }
-        next();
-    };
-export const validateRequestInit = (req: Request, res: Response, next: NextFunction) => 
-{
-    const { email, username } = req.body;
-    if (!email || !username)
-    {
-        return res.status(400).json({ error: 'Email && username required' });
-    }
-    next();
-};
-export const validateRequestGetPokemon = (req: Request, res: Response, next: NextFunction) => 
-{
-    const { username } = req.body;
-    if (!username)
-    {
-        return res.status(400).json({ error: 'username required' });
-    }
-    next();
-};
-
-# src//backend/dockerServiceClient/src/routes/gamificationRoutes.ts
-// src/routes/gamificationRoutes.ts
-import { Router } from 'express';
-import { getLeaderboard, runBattle } from '../controllers/gamificationControllers';
-
-const router = Router();
-
-router.post('/leaderboard', getLeaderboard);
-router.post('/battle', runBattle);
-
-export default router;
-
-
-# src//backend/dockerServiceClient/src/routes/pokemonRoutes.ts
-import { Router } from 'express';
-import {  validateRequestGetPokemon } from '../middlewares/validateRequest';
-import { GetPokemon } from '../controllers/PokemonController';
-
-const router = Router();
-router.post('/get', validateRequestGetPokemon, GetPokemon);
-export default router;
-
-
-# src//backend/dockerServiceClient/src/routes/userRoutes.ts
-import { Router } from 'express';
-import { GetAllUser, GetUser, GetUserDashboard, InitUser } from '../controllers/userController';
-import { validateRequest, validateRequestGetUser, validateRequestInit } from '../middlewares/validateRequest';
-
-const router = Router();
-
-router.post('/user-dashboard', validateRequest, GetUserDashboard);
-router.post('/init', validateRequestInit, InitUser);
-router.post('/get', validateRequestGetUser, GetUser);
-router.post('/getAll', GetAllUser);
-
-export default router;
-
-
-# src//backend/dockerServiceClient/src/services/PokemonService.ts
-import axios from 'axios';
-
-export const GetPokemonDatabase = async (username: string) => 
-{
-    const response = await axios.post('http://database:3000/api/pokemon/get', { username });
-    return response.data;
-};
-
-# src//backend/dockerServiceClient/src/services/gamificationService.ts
-import axios from 'axios';
-
-export const fetchLeaderboard = async () =>
-{
-    try
-    {
-        const response = await axios.get('http://gamification:7000/api/gamification/leaderboard');
-        return response.data;
-    }
-    catch (error)
-    {
-        throw new Error('Failed to fetch leaderboard');
-    }
-};
-
-export const initiateBattle = async () =>
-{
-    try
-    {
-        const response = await axios.post('http://gamification:7000/api/gamification/battle');
-        return response.data;
-    }
-    catch (error)
-    {
-        throw new Error('Failed to initiate battle');
-    }
-};
-
-
-# src//backend/dockerServiceClient/src/services/userService.ts
-import axios from 'axios';
-
-interface LoginInput 
-{
-    username: string;
-}
-interface RegisterInput 
-{
-    email: string;
-    username: string;
-}
-export const GetUserDatabase = async (username: string) => 
-{
-    const loginInput: LoginInput = { username };
-    const response = await axios.post('http://database:3000/api/login', loginInput);
-    return response.data;
-};
-
-export const GetJiraTickets = async (email: string) => 
-{
-    const response = await axios.post('http://metrics:8080/api/missions', { email });
-    return response.data;
-};
-export const InitUserDB = async (email: string, username: string) => 
-{
-    const registerInput: RegisterInput = { email, username };
-    const response = await axios.post('http://database:3000/api/register', registerInput);
-    return response.data;
-};
-
-export const InitAvatar = async (email: string) => 
-{
-    const response = await axios.post('http://imageservice:9090/api/init',  { email });
-    return response.data;
-};
-export const GetAllUserFromDB = async () => 
-{
-    const response = await axios.post('http://database:3000/api/getAll');
-    return response.data;
-};
-export const UpdateUserDatabase = async (user : any) => 
-{
-    const response = await axios.post('http://database:3000/api/update', user);
-    return response.data;
-};
-
-# src//backend/gamification/app.ts
-import express, { Request, Response } from 'express';
-import gamificationRoutes from './src/routes/gamificationRoutes';
-
-
-const app = express();
-const port = 7000;
-
-app.use(express.json());
-app.use('/api/gamification', gamificationRoutes);
-
-app.get('/health', (_: Request, res: Response) =>
-{
-    res.status(200).send('OK');
-});
-
-app.listen(port, () =>
-{
-    console.log(`Gamification service running on port ${port}`);
-});
-
-export default app;
-
-
-# src//backend/gamification/src/controllers/GamificationController.ts
-import { Request, Response } from 'express';
-import { UpdateUser, fetchAllUsers, fetchUsers } from '../services/UserServices';
-import { BattleLogic } from '../middleware/BattleQuest';
-
-export const initializeLeaderboard = async (req: Request, res: Response) =>
-{
-    try
-    {
-        const users = await fetchAllUsers();
-
-        const leaderboard = users.map((user: any) =>
-        {
-            const victories = user.gamification.victory.filter((v: boolean) => v).length;
-            return {
-                username: user.username,
-                victories: victories
-            };
-        }).sort((a: any, b: any) => b.victories - a.victories);
-
-        res.status(200).json(leaderboard);
-    }
-    catch (error)
-    {
-        res.status(500).json({ error: 'Failed to initialize leaderboard' });
-    }
-};
-
-export const handleBattleLogic = async (req: Request, res: Response) => 
-{
-    try
-    {
-        const battleResults = await BattleLogic.runTournament();
-        for (const battle of battleResults)
-        {
-            const user1 = await fetchUsers(battle.user1);
-            const user2 = await fetchUsers(battle.user2);
-            
-            if (battle.winner === user1.userInfo.username)
-            {
-                user1.userInfo.gamification.victory.push(true);
-                user2.userInfo.gamification.victory.push(false);
-            }
-            else
-            {
-                user1.userInfo.gamification.victory.push(false);
-                user2.userInfo.gamification.victory.push(true);
-            }
-
-            user1.userInfo.battleLog.push({
-                date: new Date(),
-                logs: battle.battleLog
-            });
-
-            user2.userInfo.battleLog.push({
-                date: new Date(),
-                logs: battle.battleLog
-            });
-
-            await UpdateUser(user1.userInfo);
-            await UpdateUser(user2.userInfo);
-        }
-        res.status(200).json(battleResults);
-    }
-    catch (error)
-    {
-        console.error(error); // Log the error for debugging
-        if (!res.headersSent)
-        {
-            res.status(500).json({ error: 'Failed to run battles' });
-        }
-    }
-};
-
-export const checkEvolution = async (req: Request, res: Response) => 
-{
-    // Logique pour vérifier l'évolution des pokémons
-};
-
-
-# src//backend/gamification/src/middleware/BattleQuest.ts
-// src/middleware/BattleLogic.ts
-import { fetchAllUsers, fetchUserPokemon } from '../services/UserServices';
-
-interface BattleLog
-{
-    turn: number;
-    pokemon1:
-    {
-        name: string;
-        hp: number;
-        attack: boolean;
-    };
-    pokemon2:
-    {
-        name: string;
-        hp: number;
-        attack: boolean;
-    };
-}
-
-export class BattleLogic
-{
-    static async retrieveAllUsersAndPokemon()
-    {
-        const users = await fetchAllUsers();
-        const usersWithPokemon = await Promise.all(users.map(async (user: any) =>
-        {
-            const pokemon = await fetchUserPokemon(user.username);
-            return { user, pokemon };
-        }));
-        return usersWithPokemon;
-    }
-
-    static simulateBattle(pokemon1: any, pokemon2: any): { winner: string; battleLog: BattleLog[] }
-    {
-        let battleLog: BattleLog[] = [];
-        let turn = 1;
-        console.log("pokemon1.gamification.hp");
-        console.log(pokemon1.userInfo.gamification.hp);
-
-        while (pokemon1.userInfo.gamification.hp > 0 && pokemon2.userInfo.gamification.hp > 0)
-        {
-            console.log(turn);
-            const attack1 = Math.random() < pokemon1.userInfo.gamification.competences.random / 100;
-            const attack2 = Math.random() < pokemon2.userInfo.gamification.competences.random / 100;
-
-            if (attack1)
-            {
-                pokemon2.userInfo.gamification.hp -= pokemon1.userInfo.gamification.competences.attack;
-            }
-
-            if (attack2)
-            {
-                pokemon1.userInfo.gamification.hp -= pokemon2.userInfo.gamification.competences.attack;
-            }
-
-            battleLog.push(
-            {
-                turn,
-                pokemon1:
-                {
-                    name: pokemon1.userInfo.username,
-                    hp: pokemon1.userInfo.gamification.hp,
-                    attack: attack1
-                },
-                pokemon2:
-                {
-                    name: pokemon2.userInfo.username,
-                    hp: pokemon2.userInfo.gamification.hp,
-                    attack: attack2
-                }
-            });
-
-            turn++;
-        }
-
-        const winner = pokemon1.userInfo.gamification.hp > 0 ? pokemon1.userInfo.username : pokemon2.userInfo.username;
-
-        return { winner, battleLog };
-    }
-
-    static async runTournament()
-    {
-        const usersWithPokemon = await this.retrieveAllUsersAndPokemon();
-        console.log(usersWithPokemon);
-        // Trier les utilisateurs par nombre de victoires
-        usersWithPokemon.sort((a: any, b: any) =>
-        {
-            const victoriesA = (a.user.gamification.victoire_defaite || []).filter((v: boolean) => v).length;
-            const victoriesB = (b.user.gamification.victoire_defaite || []).filter((v: boolean) => v).length;
-            return victoriesB - victoriesA;
-        });
-        console.log(usersWithPokemon);
-
-        let results: any[] = [];
-
-        // Organiser les batailles en groupes
-        for (let i = 0; i < usersWithPokemon.length - 1; i += 2)
-        {
-            if (i + 1 < usersWithPokemon.length)
-            {
-                const user1 = usersWithPokemon[i];
-                const user2 = usersWithPokemon[i + 1];
-
-                console.log("battle  n = " +  i +" " + user1.pokemon + " "+user2.pokemon);
-                const battleResult = this.simulateBattle(user1.pokemon, user2.pokemon);
-                results.push({
-                    user1: user1.user.username,
-                    user2: user2.user.username,
-                    winner: battleResult.winner,
-                    battleLog: battleResult.battleLog
-                });
-            }
-        }
-
-        return results;
-    }
-}
-
-
-# src//backend/gamification/src/middleware/ValidateRequests.ts
-
-
-# src//backend/gamification/src/routes/gamificationRoutes.ts
-import { Router } from 'express';
-import { initializeLeaderboard, handleBattleLogic, checkEvolution } from './../controllers/GamificationController';
-
-const router = Router();
-
-router.post('/leaderboard', initializeLeaderboard);
-router.post('/battle', handleBattleLogic);
-router.post('/check-evolution', checkEvolution);
-
-export default router;
-
-
-# src//backend/gamification/src/services/UserServices.ts
-// src/services/LeaderboardService.ts
-import axios from 'axios';
-
-export const fetchAllUsers = async () =>
-{
-    try
-    {
-        const response = await axios.post('http://dockerserviceclient:9000/api/getAll');
-        return response.data;
-    }
-    catch (error)
-    {
-        console.log("error");
-    }
-};
-export const fetchUsers = async (username: string) =>
-{
-    try
-    {
-        const response = await axios.post('http://dockerserviceclient:9000/api/get', {username: username});
-        return response.data;
-    }
-    catch (error)
-    {
-        console.log(error);
-    }
-};
-export const UpdateUser = async (user : any) =>
-{
-    try
-    {
-        console.log("USER BATTLE LOG " + user.battleLog);
-        const response = await axios.post('http://database:3000/api/update', {
-            email: user.email, 
-            gamification: user.gamification, 
-            battleLog: user.battleLog
-        });
-        return response.data;
-    }
-    catch (error)
-    {
-        console.error("UpdateUser error: ", error); // Log the error for debugging
-    }
-};
-    
-export const fetchUserPokemon = async (username: string) =>
-{
-    try
-    {
-        const response = await axios.post('http://dockerserviceclient:9000/api/pokemon/get', { username });
-        return response.data;
-    }
-    catch (error)
-    {
-        throw new Error(`Failed to fetch pokemon for user ${username}`);
-    }
-};
-
-
-# src//backend/imageService/app.ts
-import express from 'express';
-import imageRoutes from './src/routes/imageRoutes';
-import dotenv from 'dotenv';
-
-dotenv.config();
-
-const port = process.env.PORT;
-const app = express();
-app.use(express.json());
-app.use('/api', imageRoutes);
-app.listen(port, () => 
-{
-    console.log(`BFF service running on port ${port}`);
-});
-    
-export default app;
-
-
-# src//backend/imageService/src/controllers/EmployeeControllers.ts
-import { Request, Response } from 'express';
-import { ImageProcessor } from '../middlewares/InitImageProcessor';
-import { SetUserPathImage } from '../services/ImageServices';
-
-export const initNewEmployee = async (req: Request, res: Response) => 
-{
-    const { email } = req.body;
-
-    try
-    {
-        let pathCreated : string | undefined = await ImageProcessor.processUserImages(email);
-        await SetUserPathImage(email, pathCreated)
-        res.status(200).json({ message: "User successfully connected!" });
-    }
-    catch (error)
-    {
-        console.error('Error fetching data:', error);
-        res.status(500).json({ error: 'Failed to fetch data' });
-    }
-};
-
-
-# src//backend/imageService/src/controllers/ImageControllers.ts
-import { Request, Response } from 'express';
-import * as path from 'path';
-import * as fs from 'fs';
-
-export const GetAvatar = async (req: Request, res: Response) => 
-{
-    const { imagePath, level } = req.body;
-
-    try
-    {
-        const absolutePath = path.resolve(imagePath + '/' + level);
-        
-        // Check if the file exists
-        if (!fs.existsSync(absolutePath))
-        {
-            return res.status(404).json({ error: 'Image not found' });
-        }
-
-        // Send the image file as a response
-        res.sendFile(absolutePath, (err: any) => 
-        {
-            if (err)
-            {
-                console.error('Error sending file:', err);
-                res.status(500).send('Error sending image');
-            }
-        });
-    }
-    catch (error)
-    {
-        console.error('Error fetching data:', error);
-        res.status(500).json({ error: 'Failed to fetch data' });
-    }
-};
-
-
-# src//backend/imageService/src/middlewares/InitImageProcessor.ts
-import * as fs from 'fs';
-import * as path from 'path';
-import * as crypto from 'crypto';
-import sharp from 'sharp';
-import { fileURLToPath } from 'url';
-
-// Obtenir le chemin du fichier actuel et du répertoire
-const BASE_IMAGES_DIR = path.resolve(__dirname, '../../images');
-
-export class ImageProcessor
-{
-    private static inputDir = path.join(BASE_IMAGES_DIR, 'input');
-
-    /**
-     * Compresses an image using Sharp
-     * @param inputPath - The path of the input image
-     * @param outputPath - The path where the compressed image will be saved
-     */
-    static async compressImageSharp(inputPath: string, outputPath: string): Promise<void>
-    {
-        try
-        {
-            await sharp(inputPath)
-                .resize(800)
-                .toFormat('jpeg')
-                .jpeg({ quality: 80 })
-                .toFile(outputPath);
-            console.log(`Image compressed and saved to ${outputPath}`);
-        }
-        catch (error)
-        {
-            console.error('Error compressing image with sharp:', error);
-        }
-    }
-
-    /**
-     * Processes all images in the input directory
-     * @param outputDir - The directory where the processed images will be saved
-     */
-    static async processImages(outputDir: string): Promise<void>
-    {
-        if (!fs.existsSync(this.inputDir))
-        {
-            console.error(`Input directory does not exist: ${this.inputDir}`);
-            return;
-        }
-
-        const files = fs.readdirSync(this.inputDir);
-        for (const file of files)
-        {
-            const inputPath = path.join(this.inputDir, file);
-            const outputPathSharp = path.join(outputDir, `sharp-${file}`);
-
-            await this.compressImageSharp(inputPath, outputPathSharp);
-        }
-    }
-
-    /**
-     * Generates a SHA-256 hash from an email
-     * @param email - The email of the user
-     * @returns The hash as a hexadecimal string
-     */
-    static hashEmail(email: string): string
-    {
-        return crypto.createHash('sha256').update(email).digest('hex');
-    }
-
-    /**
-     * Creates a folder in the images directory using the hashed email as the folder name
-     * @param email - The email of the user
-     */
-    static async createUserImageFolder(email: string): Promise<void>
-    {
-        const imagesDir = BASE_IMAGES_DIR;
-        const userFolder = path.join(imagesDir, this.hashEmail(email));
-
-        // Check if the images directory exists, if not, create it
-        if (!fs.existsSync(imagesDir))
-        {
-            fs.mkdirSync(imagesDir, { recursive: true });
-        }
-
-        // Check if the user folder exists, if not, create it
-        if (!fs.existsSync(userFolder))
-        {
-            fs.mkdirSync(userFolder, { recursive: true });
-            console.log(`Dossier créé: ${userFolder}`);
-        }
-        else
-        {
-            console.log(`Le dossier existe déjà: ${userFolder}`);
-        }
-    }
-
-    /**
-     * Creates user image folder and processes images
-     * @param email - The email of the user
-     */
-    static async processUserImages(email: string): Promise<string | undefined>
-    {
-        try
-        {
-            const pathPictures = path.join(BASE_IMAGES_DIR, this.hashEmail(email));
-            await this.createUserImageFolder(email);
-            console.log('User folder created successfully.');
-            await this.processImages(pathPictures);
-            console.log('Image processing completed.');
-            return pathPictures;
-        }
-        catch (err)
-        {
-            console.error('Error creating user folder or processing images:', err);
-            return undefined;
-        }
-    }
-}
-
-
-# src//backend/imageService/src/middlewares/ValidateRequest.ts
-import { Request, Response, NextFunction } from 'express';
-
-export const validateRequestGetAvatar = (req: Request, res: Response, next: NextFunction) => 
-{
-    const { path, level} = req.body;
-    if (!path || !level)
-    {
-        return res.status(400).json({ error: 'path and level is required to find images' });
-    }
-    next();
-};
-export const validateRequestInit = (req: Request, res: Response, next: NextFunction) => 
-{
-    const { email } = req.body;
-    if (!email)
-    {
-        return res.status(400).json({ error: 'email is required to init a new employee' });
-    }
-    next();
-};
-
-# src//backend/imageService/src/routes/imageRoutes.ts
-import { Router } from 'express';
-import { initNewEmployee } from '../controllers/EmployeeControllers';
-import { GetAvatar } from '../controllers/ImageControllers';
-import { validateRequestGetAvatar, validateRequestInit } from '../middlewares/ValidateRequest';
-
-const router = Router();
-
-router.post('/get', validateRequestGetAvatar, GetAvatar);
-router.post('/init', validateRequestInit, initNewEmployee);
-
-export default router;
-
-
-# src//backend/imageService/src/services/ImageServices.ts
-import axios from 'axios';
-
-interface PathInput 
-{
-    email: string;
-    path: string | undefined;
-}
-
-export const SetUserPathImage = async (email: string, path: string | undefined) => 
-{
-    const loginInput: PathInput = { email, path};
-    const response = await axios.post('http://database:3000/api/setimagepath', loginInput);
-    return response.data;
-};
-
-# src//backend/metrics/app.ts
-import express,{ Request, Response } from 'express';
-import cors from 'cors';
-import JiraRoutes from './missionsJira/src/route'; 
-
-
-const app = express();
-const PORT = process.env.PORT || 8080;
-
-app.use(cors());
-app.use(express.json());
-app.use('/api', JiraRoutes);
-app.get('/health', (_: Request, res: Response) =>
-{
-    res.status(200).send('OK');
-});
-app.listen(PORT, () => {
-    console.log(`Server is running on port ${PORT}`);
-});
-
-# src//backend/metrics/missionsJira/src/jiraAPI/JiraAPI.ts
-// src/jiraAPI/JiraAPI.ts
-import axios from 'axios';
-import dotenv from 'dotenv';
-import { JiraStatus } from '../ticketResponse/JiraStatus';
-
-dotenv.config();
-
-export interface JiraTicket
-{
-    key: string;
-    summary: string;
-    assignee: string;
-    reporter: string;
-    status: string;
-    link: string;
-}
-
-export interface JiraResponse
-{
-    issues: Array<{
-        key: string;
-        fields:
-        {
-            summary: string;
-            assignee: { displayName: string };
-            reporter: { displayName: string };
-            status: { name: string };
-        };
-        self: string;
-    }>;
-}
-
-export class JiraAPI
-{
-    private static jiraDomain: string = process.env.JIRA_DOMAIN || '';
-    private static apiToken: string = process.env.JIRA_API_TOKEN || '';
-    private static email: string = process.env.JIRA_EMAIL || '';
-    private static projectKey: string = process.env.JIRA_PROJECT || '';
-
-    private static FormatIssue(issue: JiraResponse['issues'][0]): JiraTicket
-    {
-        return {
-            key: issue.key,
-            summary: issue.fields.summary,
-            assignee: issue.fields.assignee.displayName,
-            reporter: issue.fields.reporter.displayName,
-            status: issue.fields.status.name,
-            link: issue.self,
-        };
-    }
-
-    public static async RetrieveIssuesByStatus(assignee: string, statusCategory: string): Promise<JiraTicket[]>
-    {
-        const jql = `project = '${this.projectKey}' AND assignee = '${assignee}' AND statusCategory = '${statusCategory}'`;
-        const url = `${this.jiraDomain}/rest/api/3/search`;
-
-        const options = {
-            headers: {
-                'Authorization': `Basic ${Buffer.from(`${this.email}:${this.apiToken}`).toString('base64')}`,
-                'Accept': 'application/json'
-            },
-            params: {
-                jql: jql,
-                fields: 'summary,status,assignee,reporter'
-            }
-        };
-
-        try
-        {
-            const response = await axios.get<JiraResponse>(url, options);
-            return response.data.issues.map(this.FormatIssue);
-        }
-        catch (error)
-        {
-            console.error('Error fetching issues:', error);
-            return [];
-        }
-    }
-
-    public static async GetInProgressIssues(assignee: string): Promise<JiraTicket[]>
-    {
-        return this.RetrieveIssuesByStatus(assignee, JiraStatus.IN_PROGRESS);
-    }
-
-    public static async GetTodoIssues(assignee: string): Promise<JiraTicket[]>
-    {
-        return this.RetrieveIssuesByStatus(assignee, JiraStatus.TODO);
-    }
-
-    public static async GetDoneIssues(assignee: string): Promise<JiraTicket[]>
-    {
-        return this.RetrieveIssuesByStatus(assignee, JiraStatus.DONE);
-    }
-}
-
-
-# src//backend/metrics/missionsJira/src/route.ts
-import { Router } from 'express';
-import { JiraActionFactory } from './ticketResponse/ticketFactory';
-import { JiraStatus } from './ticketResponse/JiraStatus';
-const router = Router();
-
-router.post('/missions', async (req, res) =>
-{
-    const { user } = req.body;
-    try
-    {
-        const action = JiraActionFactory.createAction(JiraStatus.ALL);
-        const issues = await action.execute(user);
-        console.log('All Issues:', issues);
-        res.status(200).json(issues);
-    }
-    catch (error)
-    {
-        res.status(500).json({ error: "Internal server error." });
-    }
-});
-
-export default router;
-
-
-# src//backend/metrics/missionsJira/src/ticketResponse/IJiraAction.ts
-// src/ticketResponse/IJiraAction.ts
-import { JiraTicket, JiraAPI } from './../jiraAPI/JiraAPI';
-
-
-interface IJiraAction
-{
-    execute(assignee: string): Promise<any>;
-}
-
-class RetrieveInProgressTickets implements IJiraAction
-{
-    async execute(assignee: string): Promise<JiraTicket[]>
-    {
-        return JiraAPI.GetInProgressIssues(assignee);
-    }
-}
-
-class RetrieveTodoTickets implements IJiraAction
-{
-    async execute(assignee: string): Promise<JiraTicket[]>
-    {
-        return JiraAPI.GetTodoIssues(assignee);
-    }
-}
-
-class RetrieveDoneTickets implements IJiraAction
-{
-    async execute(assignee: string): Promise<JiraTicket[]>
-    {
-        return JiraAPI.GetDoneIssues(assignee);
-    }
-}
-
-interface TicketResponse
-{
-    TodoTickets: JiraTicket[];
-    InProgressTickets: JiraTicket[];
-    DoneTickets: JiraTicket[];
-}
-
-class RetrieveJiraTickets implements IJiraAction
-{
-    
-    async execute(assignee: string): Promise<TicketResponse>
-    {
-        const TodoTickets: JiraTicket[] = await JiraAPI.GetTodoIssues(assignee);
-        const InProgressTickets: JiraTicket[] = await JiraAPI.GetInProgressIssues(assignee);
-        const DoneTickets: JiraTicket[] = await JiraAPI.GetDoneIssues(assignee);
-
-        return {
-            TodoTickets,
-            InProgressTickets,
-            DoneTickets
-        };
-    }
-}
-
-
-export {
-    IJiraAction,
-    RetrieveJiraTickets,
-    RetrieveInProgressTickets,
-    RetrieveTodoTickets,
-    RetrieveDoneTickets
-};
-
-
-# src//backend/metrics/missionsJira/src/ticketResponse/JiraStatus.ts
-// JiraStatusEnum.ts
-export enum JiraStatus
-{
-    ALL = 'All',
-    IN_PROGRESS = 'In Progress',
-    TODO = 'To Do',
-    DONE = 'Done'
-}
-
-
-# src//backend/metrics/missionsJira/src/ticketResponse/ticketFactory.ts
-// src/ticketResponse/ticketFactory.ts
-import {
-    IJiraAction,
-    RetrieveJiraTickets,
-    RetrieveInProgressTickets,
-    RetrieveTodoTickets,
-    RetrieveDoneTickets
-} from './IJiraAction';
-
-import { JiraStatus } from './JiraStatus';
-
-export class JiraActionFactory
-{
-    public static createAction(actionType: JiraStatus): IJiraAction
-    {
-        switch (actionType)
-        {
-            case JiraStatus.ALL:
-                return new RetrieveJiraTickets();
-            case JiraStatus.IN_PROGRESS:
-                return new RetrieveInProgressTickets();
-            case JiraStatus.TODO:
-                return new RetrieveTodoTickets();
-            case JiraStatus.DONE:
-                return new RetrieveDoneTickets();
-            default:
-                throw new Error('Invalid action type');
-        }
-    }
-}
-
-
-# src//backend/metrics/missionsJira/test/test.ts
-// src/index.ts
-import { JiraActionFactory } from './../src/ticketResponse/ticketFactory';
-import { JiraStatus } from './../src/ticketResponse/JiraStatus';
-
-(async () => {
-    const action = JiraActionFactory.createAction(JiraStatus.ALL);
-    const issues = await action.execute('maximepoyet.yourpieces@outlook.fr');
-    console.log('All Issues:', issues);
-
-    const inProgressAction = JiraActionFactory.createAction(JiraStatus.IN_PROGRESS);
-    const inProgressIssues = await inProgressAction.execute('maximepoyet.yourpieces@outlook.fr');
-    console.log('In Progress Issues:', inProgressIssues);
-
-    const todoAction = JiraActionFactory.createAction(JiraStatus.TODO);
-    const todoIssues = await todoAction.execute('maximepoyet.yourpieces@outlook.fr');
-    console.log('TODO Issues:', todoIssues);
-
-    const doneAction = JiraActionFactory.createAction(JiraStatus.DONE);
-    const doneIssues = await doneAction.execute('maximepoyet.yourpieces@outlook.fr');
-    console.log('Done Issues:', doneIssues);
-})();
+export default reportWebVitals;
+
+
+# src/frontend//src/setupTests.ts
+// jest-dom adds custom jest matchers for asserting on DOM nodes.
+// allows you to do things like:
+// expect(element).toHaveTextContent(/react/i)
+// learn more: https://github.com/testing-library/jest-dom
+import '@testing-library/jest-dom';
 
 
